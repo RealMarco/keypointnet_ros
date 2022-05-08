@@ -17,7 +17,7 @@ import cv2
 #import random
 import numpy as np
 #import pandas as pd
-import matplotlib.pylab as plt  # For interactive coding, e.g., Notebook
+#import matplotlib.pylab as plt  # For interactive coding, e.g., Notebook
 # import matplotlib.pyplot as plt # For (non-interactive) scripts
 
 ### learning modules
@@ -284,26 +284,43 @@ if __name__ == '__main__': # avoid automatic running below lines when this .py f
     
 
     ### Visualizing predicted Keypoints
-    plt.figure(figsize=(20, 20))
-    colors = ['#1D2088', '#C00000','#7030A0','#AFABAB', '#F22CE9'] # blue, red, purple, grey, magenta
+    # plt.figure(figsize=(20, 20))
+    colors =[(136,32,29), (0,0,192), (160,48,112),(171,171,175),(233,44,242)] # BGR
+    # colors = ['#1D2088', '#C00000','#7030A0','#AFABAB', '#F22CE9'] # blue, red, purple, grey, magenta
     # For RGB, [(29,32,136), (192,0,0), (112,48,160),(175,171,171),(242,44,233)]
     # For BGR, [(136,32,29), (0,0,192), (160,48,112),(171,171,175),(233,44,242)]
+    states= ['top','side','bottom'] # 0,1,2 represents top, side, bottom state respectively
+    keypoint_classes =  ['toe','heel','inside','outside','topline']
     for i in range(batchsize):
         if infer_mode == 'test':
             img =  cv2.imread(test_filelists2[i])[:, :, ::-1]
         elif infer_mode == 'deploy':
-            img= test_filelists2[i][:, :, ::-1] # BGR -> RGB
+            img= test_filelists2[i] # [:, :, ::-1] # BGR -> RGB
         else:
             print('The model %s is to be updated soon'%infer_mode)
-            
+        
+        '''
+        # Matplotlib visulization
         plt.subplot(1,batchsize,i+1)
         plt.imshow(img)
         for j in range(confident_kps.shape[1]//3):
             if confident_kps[i][3*j]>0.5:
                 plt.plot(confident_kps[i][3*j+1]+0.5,confident_kps[i][3*j+2]+0.5,'.', color=colors[j], markersize=16) # +0.5 means centre of pixel
                 plt.text(confident_kps[i][3*j+1]+0.5,confident_kps[i][3*j+2]+0.5, "({:.2f},{:.2f})".format(confident_kps[i][3*j+1],confident_kps[i][3*j+2]))
+        '''
+        # opencv visualization
+        for j in range(confident_kps.shape[1]//3):
+            if confident_kps[i][3*j]>0.5:
+                img =cv2.circle(img, (round(confident_kps[i][3*j+1]), round(confident_kps[i][3*j+2])), 8, colors[j], -1)
+                img=cv2.putText(img, keypoint_classes[j], (round(confident_kps[i][3*j+1]), round(confident_kps[i][3*j+2])), cv2.FONT_HERSHEY_SIMPLEX , 1, colors[j], 2, cv2.LINE_AA)
+        img=cv2.putText(img, states[state_classes[i]], (10, 50), cv2.FONT_HERSHEY_SIMPLEX , 2, (0,255,0), 2, cv2.LINE_AA)
+              
+        cv2.namedWindow("image %d"%i)
+        cv2.imshow("image %d"%i, img)
+        cv2.waitKey(5000)
+        cv2.destroyAllWindows()
         ### TO DO -  state class-based keypoint outputs
     ### Outputing predicted state
-    states= ['top','side','bottom'] # 0,1,2 represents top, side, bottom state respectively
-    for i in range(batchsize):
-        print(states[state_classes[i]])
+    
+    # for i in range(batchsize):
+    #     print(states[state_classes[i]])

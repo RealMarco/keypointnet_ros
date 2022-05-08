@@ -159,16 +159,17 @@ def keypoint_publisher():
             for j in range(confident_kps.shape[1]//3):
                 kp.confidence = confident_kps[i][3*j]
                 # transfer from cropped image coordinate system to original image coordinate system
-                kp.x = confident_kps[i][3*j+1] + CroppedXYmin[i][0] # + 0.5 pixel coordinate, no need to +0.5
-                kp.y = confident_kps[i][3*j+2] + CroppedXYmin[i][1]
+                kp.x = round(confident_kps[i][3*j+1] + CroppedXYmin[i][0]) # + 0.5 pixel coordinate, no need to +0.5
+                kp.y = round(confident_kps[i][3*j+2] + CroppedXYmin[i][1])
                 kp.kp_class = keypoint_classes[j]
                 
                 kp_state.keypoints.append(kp)
                 
                 #Visualize keypoints
                 KPImage =cv2.circle(KPImage, (kp.x, kp.y), 8, kp_colors[j], -1) # circle(img, point_center, radius, BGR, thickness
+                KPImage=cv2.putText(KPImage, keypoint_classes[j], (kp.x, kp.y), cv2.FONT_HERSHEY_SIMPLEX , 1, kp_colors[j], 2, cv2.LINE_AA) # kp.kp_class
             #Visualize state
-            KPImage=cv2.putText(KPImage, kp_state.state, (CroppedXYmin[i][0], CroppedXYmin[i][1]), cv2.FONT_HERSHEY_SIMPLEX , 1, (0,255,0), 2, cv2.LINE_AA) 
+            KPImage=cv2.putText(KPImage, kp_state.state, (CroppedXYmin[i][0], CroppedXYmin[i][1]), cv2.FONT_HERSHEY_SIMPLEX , 2, (0,255,0), 2, cv2.LINE_AA) 
             # putText(Image, text, bottom-left corner, font, fontScale, color, thickness, lineType, bottomLeftOrigin)
             # publish keypoints with state 
             kp_state_publisher.publish(kp_state)
