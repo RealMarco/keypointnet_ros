@@ -1,0 +1,53 @@
+1. Use a seperate keypoint_ros package or combine the keypoint detection and pose class classification in darknet_ros and darknet_msg package
+2. If we use a seperate keypoint_ros package, catkin_create_pkg keypoint_ros std_msgs rospy roscpp ... and other dependencies at first
+
+3. Has the software been transferred into and tested sucessfully on the Desktop PC? no
+4. What are the CUDA and cuDNN version used by YOLO and PyTorch?
+5. Would installing paddle by conda install the corresponding CUDA and cudnn version in conda environment? It would be better to specify the cudatoolkit version according to the doc.
+6. How to combine conda and ros environment? Install ROS at first, then install conda, ROS noetic won't conflict with python3. 
+7. Will PaddlePaddle environment conflict with the existing CUDA used by YOLO? - To be validate.
+
+8. What are the names of published topics of darknet_ros? Just like thoes metioned in ros.yaml
+8.5 What nodes was used? only darknet_ros (and darknet_ros_test)
+9. Did and will the robot system use topic or service for perception and manipulation? How to promise the consistency of raw image and detected image (time delay or ...)? Most of them are topics, Dozens of frames/s, Only the 1st frame was used (without feedback). 
+10.What were presented on the screen? Is it the Image subscribed with topic /darknet_ros/detection_image? Yes, its iamge with bbx.
+12. What is the function and mechanism of Action server? Not used 
+11. What about the workflow of software and rqtgraph? See the shortcut
+
+11. How the node, publishers, subscribers collaborate with one another? Only one node named darknet_ros (darknet_ros_test). In the light of publishDetectionImage, publishInThread and cameraCallback, the node publish detectionImage, boundingBoxes and the number of detected objects cyclically (by while loop) without ros::Rate and its sleep() method 
+11.1How did the raw iamge subscriber transfer the value (raw image) cyclically without a explicit loop? Maybe by global variable according to image_transport/image_transport, image_transport::ImageTransport, (ROS), imageTransport_, (ros::NodeHandle,)
+10.5 Did the image with bounding boxes present in real-time or only the first one? 
+
+
+13. What is Header? 
+14. What is the probability/confidence threshold of BoundingBoxes? Considering probability thresh
+15. Has YOLOv4p been deployed? Some changes of parameters are required.
+
+16. Asynchronous manipulation and manipulate according to the number of shoes.
+17. Overall framework: communicate by topics or service, or a huge functional package which just subscribe the keypoints and shoe states once.
+18 What is the difference between catkin_install_python in CMakeLists.txt (http://wiki.ros.org/rospy_tutorials/Tutorials/WritingPublisherSubscriber) and shebang at the head of .py?
+
+
+0. Install PaddlePaddle 2.2.2 (CUDA 10.1, cuDNN 7.6, Python 3.7.4) refer to official doc, https://www.paddlepaddle.org.cn/documentation/docs/zh/install/conda/linux-conda.html
+(安培架构Ampere的显卡3080与3090 CUDA11+, 非安培架构的GPU推荐使用CUDA10.2) What are the CUDA and cuDNN version used by YOLO and PyTorch?
+
+W0504 17:22:58.886144   162 device_context.cc:447] Please NOTE: device: 0, GPU Compute Capability: 7.0, Driver API Version: 11.0, Runtime API Version: 10.1
+W0504 17:22:58.891340   162 device_context.cc:465] device: 0, cuDNN Version: 7.6.
+Cuda compilation tools, release 10.1, V10.1.243s
+
+
+$ cd ~/catkin_workspace/src
+$ catkin_create_pkg keypoint_ros std_msgs rospy roscpp sensor_msgs darknet_ros_msgs  # some packages used by darknet_ros darknet_ros_msg 
+
+0)
+$ catkin_create_pkg keypointnet_ros_msgs actionlib_msgs geometry_msgs sensor_msgs message_runtime std_msgs
+$ catkin_create_pkg keypointnet_ros rospy roscpp std_msgs cv_bridge sensor_msgs darknet_ros_msgs keypointnet_ros_msgs image_transport message_generation message_runtime nodelet actionlib
+$ catkin_make -DPYTHON_EXECUTABLE=/usr/bin/python3   # instead of catkin_make [Error]
+1) train resnet34 classification model without @paddle.jit.to_static to acuquire a model with smaller size
+2) cv.circle(,(x,y),) plt.plot(x+0.5, y+0.5)
+3) dive into rospy, package.xml, CMakelist.txt
+
+
+
+
+
