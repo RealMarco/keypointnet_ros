@@ -1,4 +1,4 @@
 # Ignore files and folders below
 keypointnet_ros/scripts/trained_models/
 *.pdparams
-*/__pycache__
+**/__pycache__/
