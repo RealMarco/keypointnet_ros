@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/home/dongyi/anaconda3/envs/paddle_env/bin/python
 # -*- coding: utf-8 -*-
 """
 @author: marco
@@ -7,7 +7,10 @@
 ### import necessary packages
 ### system modules
 #import sys 
-#sys.path.append('/home/aistudio/external-libraries')
+#from sys import path
+#path.append(0, sys.path[0] + '\\utils')
+#sys.path.append('..')
+#sys.path.append('/home/dongyi/ur_ws/src/keypointnet_ros/keypointnet_ros/scripts')
 #import os
 #import logging 
 #from datetime import datetime
@@ -30,10 +33,11 @@ import paddle
 #from sklearn.metrics import cohen_kappa_score, accuracy_score, precision_score, recall_score, confusion_matrix, ConfusionMatrixDisplay, plot_confusion_matrix
 
 ### custom modules
-import transforms as trans 
+import inference.transforms as trans 
 #import functional as F
 # The transformations for KeypointD and Classification is different, so use seperate Datasets
 from utils.PCDataset import img_dataset # Dataset of Direct state Classification
+# import utils.PCDataset.img_dataset as img_dataset
 from utils.KPDataset import imgDataset  # Dataset of KeyPoint Detection
 #from utils.KPmetrics import cal_ed, cal_ed_val, cal_loss # Metrics of Keypoint Detection
 from models.resnet34_classification_paddle import Model_resnet34
@@ -314,11 +318,14 @@ if __name__ == '__main__': # avoid automatic running below lines when this .py f
                 img =cv2.circle(img, (round(confident_kps[i][3*j+1]), round(confident_kps[i][3*j+2])), 8, colors[j], -1)
                 img=cv2.putText(img, keypoint_classes[j], (round(confident_kps[i][3*j+1]), round(confident_kps[i][3*j+2])), cv2.FONT_HERSHEY_SIMPLEX , 1, colors[j], 2, cv2.LINE_AA)
         img=cv2.putText(img, states[state_classes[i]], (10, 50), cv2.FONT_HERSHEY_SIMPLEX , 2, (0,255,0), 2, cv2.LINE_AA)
-              
-        cv2.namedWindow("image %d"%i)
-        cv2.imshow("image %d"%i, img)
-        cv2.waitKey(5000)
-        cv2.destroyAllWindows()
+        # print(type(img))
+        #cv2.namedWindow("image %d"%i)
+        # cv2.imshow("image %d"%i, img)
+        cv2.imshow("image",img)
+        #cv2.waitKey(4000)
+        while (cv2.waitKey(3000)==27):
+            pass
+        #cv2.destroyAllWindows()
         ### TO DO -  state class-based keypoint outputs
     ### Outputing predicted state
     

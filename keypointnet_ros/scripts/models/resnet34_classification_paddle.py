@@ -1,3 +1,4 @@
+#!/home/dongyi/anaconda3/envs/paddle_env/bin/python3
 import paddle
 import paddle.nn as nn
 from paddle.vision.models import resnet34 # ,resnet50,resnet18

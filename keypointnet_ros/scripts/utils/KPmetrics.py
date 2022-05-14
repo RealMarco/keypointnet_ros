@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/home/dongyi/anaconda3/envs/paddle_env/bin/python3
 # -*- coding: utf-8 -*-
 """
 @author: marco
@@ -6,8 +6,8 @@
 
 # Configuration 
 ### import necessary packages
-import sys 
-sys.path.append('/home/aistudio/external-libraries')
+# import sys 
+# sys.path.append('/home/aistudio/external-libraries')
 #import os
 #import cv2
 #import random

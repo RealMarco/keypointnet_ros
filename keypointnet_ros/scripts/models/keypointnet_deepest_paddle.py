@@ -1,3 +1,4 @@
+#!/home/dongyi/anaconda3/envs/paddle_env/bin/python3
 #import paddle
 import paddle.nn as nn
 import paddle.nn.functional as F

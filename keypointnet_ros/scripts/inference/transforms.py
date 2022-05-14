@@ -1,3 +1,4 @@
+#!/home/dongyi/anaconda3/envs/paddle_env/bin/python3
 from __future__ import division
 
 import collections
@@ -10,7 +11,7 @@ import warnings
 import cv2
 import numpy as np
 
-import functional as F
+import inference.functional as F
 
 __all__ = [
     "Compose", "ComposeWithPoint", "Resize", "Scale",

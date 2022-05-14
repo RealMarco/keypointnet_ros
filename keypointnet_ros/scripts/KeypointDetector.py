@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/home/dongyi/anaconda3/envs/paddle_env/bin/python3
 # -*- coding: utf-8 -*-
 # 
 """
@@ -33,6 +33,8 @@ string kp_class
 
 #import os
 #import threading
+import sys
+sys.path.append('/home/dongyi/ur_ws/src/keypointnet_ros/keypointnet_ros/scripts')
 from threading import Thread
 
 import cv2
@@ -45,9 +47,10 @@ from std_msgs.msg import String
 from sensor_msgs.msg import Image # ?
 from keypointnet_ros_msgs.msg import Keypoints, Keypoint
 
-from keypoints_pred import get_trained_model, KPinfer, PCinfer, best_PCmodel_path, best_PCmodel_path2, best_KPmodel_path
+
 from models.resnet34_classification_paddle import Model_resnet34
 from models.keypointnet_deepest_paddle import KeypointNet_Deepest # GResNet-Deepest
+from inference.keypoints_pred import KPinfer, PCinfer, best_PCmodel_path, best_PCmodel_path2, best_KPmodel_path, get_trained_model
 
 # References:
 # http://wiki.ros.org/cv_bridge/Tutorials/ConvertingBetweenROSImagesAndOpenCVImagesPython
@@ -60,24 +63,23 @@ from models.keypointnet_deepest_paddle import KeypointNet_Deepest # GResNet-Deep
 def cimgCallback(cimg):
 #    bridge =  CvBridge()
     try:
-        cv_cimg = CvBridge.imgmsg_to_cv2(cimg, "bgr8") # desired_encoding="passthrough"
-#    cimg = CvBridge.cv2_to_imgmsg(cv_cimg, "bgr8") # encoding="passthrough"
+        cv_cimg = cvbridge.imgmsg_to_cv2(cimg, "rgb8") # "bgr8", desired_encoding="passthrough"
     except CvBridgeError as e:
         rospy.logerr('Converting camera image error: ' + str(e))
     global OriImage # essential to claim a variable as global 
     OriImage = cv_cimg
-    rospy.loginfo("Subscribing an image from camera with a shape of ", OriImage.shape) # (H,W,C)
+    rospy.loginfo("Subscribing an image from camera with a shape of (%d, %d, %d) "%(OriImage.shape[0],OriImage.shape[1],OriImage.shape[2])) # (H,W,C)
     
 # define an raw image subscriber
 def camera_img_subscriber():
 #    rospy.init_node('camera_img_subscriber', anonymous=True)
-    rospy.Subscriber('/camera/color/image_raw', Image, cimgCallback) # '/camera/image_raw'
+    rospy.Subscriber('/camera/color/image_raw', Image, cimgCallback, queue_size=1) # '/camera/image_raw'
 #    rospy.spin()
 
 # define an infer callback function, which would cropping OriImage by bbxes firtly
 def inferCallback(bbxes):
-    rospy.sleep(0.4)
-    # global ShoeBbxes # not required to claim a list as global
+    #rospy.sleep(0.2)
+    global ShoeBbxes, CroppedImgs, CroppedXYmin, CroppedXYmax # not required to claim a list as global
     ShoeBbxes.clear() # clear the existing ShoeBbxes; global ShoeBbxes ShoeBbxes=[]
     for bbx in bbxes.bounding_boxes:
         if bbx.Class == 'shoe':  # 
@@ -89,16 +91,17 @@ def inferCallback(bbxes):
     # crop original image by bounding boxes
     CroppedImgs.clear() # clear the existing CroppedImgs
     CroppedXYmin.clear()
+    CroppedXYmax.clear()
     for ShoeBbx in ShoeBbxes:
 #        global OriImage, CroppedImgs
         cropped_img = OriImage[ShoeBbx[1]:ShoeBbx[3], ShoeBbx[0]:ShoeBbx[2]]# [ymin:ymax,xmin:xmax]
         CroppedImgs.append(cropped_img)
         CroppedXYmin.append([ShoeBbx[0], ShoeBbx[1]])
+        CroppedXYmax.append([ShoeBbx[2], ShoeBbx[3]])
         
         
     # Infer CroppedImgs list and return keypoints + shoe pose/states classes.
-    global state_classes
-    global confident_kps
+    global state_classes, confident_kps
     global PCmodel, PCmodel2, KPmodel
     ### May use multi threads to speed up the inference
     ### Infer State class
@@ -108,6 +111,7 @@ def inferCallback(bbxes):
     confident_kps= KPinfer(KPmodel,CroppedImgs)  #the size of confident_kps is CroppeedImg num x 15
     
     # publish keypoints with state and its KPImage
+    #rospy.sleep(0.2)
     keypoint_publisher()
 
 # define a BoundingBoxes subscriber
@@ -117,7 +121,7 @@ def bbxes_subscriber():
     
     # Registration: create a subscriber, and subscribing a topic named bounding_boxes with BoundingBoxes message
     # Register bbxes Callback function
-    rospy.Subscriber('/darknet_ros/bounding_boxes', BoundingBoxes, inferCallback) # 'bounding_boxes'
+    rospy.Subscriber('/darknet_ros/bounding_boxes', BoundingBoxes, inferCallback, queue_size=1) # 'bounding_boxes'
     
     # recurrently subscribe the bbxes
 #    rospy.spin() # blocking function
@@ -126,18 +130,17 @@ def bbxes_subscriber():
 def odImgCallback(odImg):
 #    bridge =  CvBridge()
     try:
-        cv_odImg = CvBridge.imgmsg_to_cv2(odImg, "bgr8") # desired_encoding="passthrough"
-#    cimg = CvBridge.cv2_to_imgmsg(cv_cimg, "bgr8") # encoding="passthrough"
+        cv_odImg = cvbridge.imgmsg_to_cv2(odImg, "rgb8") # bgr8, desired_encoding="passthrough"
     except CvBridgeError as e:
         rospy.logerr('Converting object detection image error: ' + str(e))
     global ODImage # essential to claim a variable as global 
     ODImage = cv_odImg
-    rospy.loginfo("Subscribing an object detection image with a shape of ", ODImage.shape) # (H,W,C)
+    rospy.loginfo("Subscribing an object detection image with a shape of (%d, %d, %d)"%(ODImage.shape[0],ODImage.shape[1], ODImage.shape[2])) # (H,W,C)
 
 # define an object detection image subscriber
 def od_img_subscriber():
 #    rospy.init_node('bbx_img_subscriber', anonymous=True)
-    rospy.Subscriber('/darknet_ros/detection_image', Image, odImgCallback) # '/camera/image_raw'
+    rospy.Subscriber('/darknet_ros/detection_image', Image, odImgCallback, queue_size=1) # '/camera/image_raw'
 #    rospy.spin()
 
     
@@ -146,39 +149,45 @@ def keypoint_publisher():
     # init ros node
 #    rospy.init_node('shoe_state_publiser', anonymous=True) # try anonymous person
     try:
-        rospy.sleep(0.2) # wait for finishing node registration, or the 1st msg wouldn't be published
+        # rospy.sleep(0.1) # wait for finishing node registration, or the 1st msg wouldn't be published
         # if len(state_classes)==len(confident_kps):
         # create msg
-        global KPImage, state_classes, confident_kps
-        KPImage = ODImage
+        global ShoeBbxes, KPImage, state_classes, confident_kps, OriImage, CroppedXYmin, CroppedXYmax #ODImage
+        KPImage = OriImage #ODImage
         for i in range(len(state_classes)): # number of shoeBBxes or CroppeedImgs
             kp_state =  Keypoints() # keypoints with state
             kp_state.state = shoe_states[state_classes[i]]
             kp =Keypoint()
             # kp_state.keypoints ...
             for j in range(confident_kps.shape[1]//3):
-                kp.confidence = confident_kps[i][3*j]
-                # transfer from cropped image coordinate system to original image coordinate system
-                kp.x = round(confident_kps[i][3*j+1] + CroppedXYmin[i][0]) # + 0.5 pixel coordinate, no need to +0.5
-                kp.y = round(confident_kps[i][3*j+2] + CroppedXYmin[i][1])
-                kp.kp_class = keypoint_classes[j]
-                
-                kp_state.keypoints.append(kp)
-                
-                #Visualize keypoints
-                KPImage =cv2.circle(KPImage, (kp.x, kp.y), 8, kp_colors[j], -1) # circle(img, point_center, radius, BGR, thickness
-                KPImage=cv2.putText(KPImage, keypoint_classes[j], (kp.x, kp.y), cv2.FONT_HERSHEY_SIMPLEX , 1, kp_colors[j], 2, cv2.LINE_AA) # kp.kp_class
+                if confident_kps[i][3*j]>0.5: # confidence threshold
+            	    kp.confidence = confident_kps[i][3*j]
+    	            # transfer from cropped image coordinate system to original image coordinate system
+    	            kp.x = round(confident_kps[i][3*j+1] + CroppedXYmin[i][0]) # ShoeBbxes[i][0]) + 0.5 pixel coordinate, no need to +0.5
+    	            kp.y = round(confident_kps[i][3*j+2] + CroppedXYmin[i][1]) # ShoeBbxes[i][1])#
+    	            kp.kp_class = keypoint_classes[j]
+    	        
+    	            kp_state.keypoints.append(kp)
+    	        
+    	            #Visualize keypoints
+    	            KPImage =cv2.circle(KPImage, (kp.x, kp.y), 8, kp_colors[j], -1) # circle(img, point_center, radius, BGR, thickness
+    	            KPImage=cv2.putText(KPImage, kp.kp_class+str(round(kp.confidence,2)), (kp.x+6, kp.y-6), cv2.FONT_HERSHEY_SIMPLEX , 0.5, kp_colors[j], 1, cv2.LINE_AA) # kp.kp_class keypoint_classes[j]
             #Visualize state
-            KPImage=cv2.putText(KPImage, kp_state.state, (CroppedXYmin[i][0], CroppedXYmin[i][1]), cv2.FONT_HERSHEY_SIMPLEX , 2, (0,255,0), 2, cv2.LINE_AA) 
+            KPImage=cv2.rectangle(KPImage, (CroppedXYmin[i][0], CroppedXYmin[i][1]), (CroppedXYmax[i][0],CroppedXYmax[i][1]), (0,255,0),2) # (img,(left, top),(right, bottom), color, thickness)
+            KPImage=cv2.putText(KPImage, "Shoe - %s"%kp_state.state, (CroppedXYmin[i][0]+10,CroppedXYmin[i][1]-10), cv2.FONT_HERSHEY_SIMPLEX , 1, (0,255,0), 2, cv2.LINE_AA) 
             # putText(Image, text, bottom-left corner, font, fontScale, color, thickness, lineType, bottomLeftOrigin)
             # publish keypoints with state 
             kp_state_publisher.publish(kp_state)
             rospy.loginfo("Publishing shoe keypoints with state %s"%(kp_state.state))
         
         # publisher Present the keypoints and shoe class on ODImage, similar to the topic /darknet_ros/detection_image in object detection
-        KPImage_msg = CvBridge.cv2_to_imgmsg(KPImage, "bgr8") # encoding="passthrough"
+        # KPImage =  np.asarray(KPImage)
+        cv2.imshow("Keypoint Detection", KPImage[:, :, ::-1]) # RGB to BGR
+        while (cv2.waitKey(30)==27):
+            pass
+        KPImage_msg = cvbridge.cv2_to_imgmsg(KPImage, "bgr8") #"bgr8", encoding="passthrough"
         kp_img_publisher.publish(KPImage_msg)
-        rospy.loginfo("Publishing an keypoint detection image with a shape of", KPImage.shape) 
+        rospy.loginfo("Publishing an keypoint detection image with a shape of (%d, %d, %d)"%(KPImage.shape[0],KPImage.shape[1],KPImage.shape[2])) 
     except rospy.ROSInterruptException: # except [error type]
         pass 
 
@@ -192,12 +201,14 @@ if __name__ == "__main__":# avoid automatic running below lines when this .py fi
     KPImage =  np.ones((2,2))
     ShoeBbxes = []
     CroppedImgs = []
-    CroppedXYmin = []  # record the [[xmin, ymin],] for coordinate transferring  
+    CroppedXYmin = []  # record the [[xmin, ymin],] for coordinate transferring 
+    CroppedXYmax = []
     state_classes = []
     confident_kps= []
     shoe_states= ['top','side','bottom']
     keypoint_classes =  ['toe','heel','inside','outside','topline']
     kp_colors = [(136,32,29), (0,0,192), (160,48,112),(171,171,175),(233,44,242)] # BGR
+    cvbridge = CvBridge()
 #        test_i = Image()
 #        #test_i.
     
@@ -217,10 +228,12 @@ if __name__ == "__main__":# avoid automatic running below lines when this .py fi
         PCmodel2= Model_resnet34()
         PCmodel2= get_trained_model(PCmodel2,best_PCmodel_path2)
     
-    rospy.init_node('keypointnet_ros', anonymous=True)
+    rospy.init_node("keypointnet_ros", anonymous=True)
+    #rospy.init_node('keypointnet_ros')
     # Registration: Create a publisher, and publish a topic named person_info with test_topic.msg.Person message, queue size =4
-    kp_state_publisher= rospy.Publisher('/keypointnet_ros/state_keypoints', Keypoints, queue_size=2) # latch =
+    kp_state_publisher= rospy.Publisher('/keypointnet_ros/state_keypoints', Keypoints, queue_size=1) # latch =
     kp_img_publisher  = rospy.Publisher('/keypointnet_ros/keypoint_image', Image, queue_size=1)
+    rospy.sleep(0.2) # wait for finishing node registration, or the 1st msg wouldn't be published
     
     # keep subscribing... cyclically
     t1 = Thread(target=camera_img_subscriber) # args=(arg_for_target_function,)
