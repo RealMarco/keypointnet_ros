@@ -1,0 +1,5 @@
+ $ conda install 
+ scikit-learn
+ numpy
+ $ conda install -c conda-forge opencv
+ $ conda install -c conda-forge rospkg

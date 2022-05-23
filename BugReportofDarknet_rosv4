@@ -1,0 +1,83 @@
+darknet_ros (yolov4) errors
+
+For $ catkin_make
+1) make[2]: *** No rule to make target 'darknet_ros/darknet/src/network_kernels. need by '/darknet_ros/darknet_ros/CMakeFiles/...'
+A: 删除编译后生成的 build/darknet_ros/darknet_ros/CMakeFiles里的相关文件夹
+
+2)error: #error "OpenCV 4.x+ requires enabled C++11 support"
+3)error: no matching function for call to ‘_IplImage::_IplImage(cv::Mat&)’
+  596 |   IplImage* ROS_img = new IplImage(camImageCopy_);
+A: refer to https://github.com/leggedrobotics/darknet_ros/commit/256ea5050a866dbd3973046428dcaeecc390a148
+,https://gitlab.com/neutron-nuaa/robot-arm/-/tree/main/Paper_manipulation_and_shoe_packaging/darknet_ros/darknet_ros 
+and /home/dongyi/darknet
+Files below were modified:
+include/darknet_ros/image_interface.hpp 
+include/darknet_ros/YoloObjectDetector.hpp 
+src/image_interface.cpp
+src/YoloObjectDetector.cpp
+(src/yolo_object_detector_nodelet.cpp)
+/darknet/
+
+  
+4) /usr/bin/ld: /home/dongyi/ur_ws/devel/lib/libdarknet_ros_lib.so: undefined reference to `pull_implicit_layer'
+/usr/bin/ld: /home/dongyi/ur_ws/devel/lib/libdarknet_ros_lib.so: undefined reference to `push_implicit_layer'
+/usr/bin/ld: /home/dongyi/ur_ws/devel/lib/libdarknet_ros_lib.so: undefined reference to `make_implicit_layer'
+A: Add ${DARKNET_PATH}/src/representation_layer.c  (refer to https://github.com/leggedrobotics/darknet_ros/issues/329)
+
+For $ roslaunch
+5) too much GPU/CPU memory was occupied by $ roslaunch darknet_ros yolov4-p5RP.launch
+YOLO
+ Try to load cfg: /home/dongyi/ur_ws/src/darknet_ros/darknet_ros/yolo_network_config/cfg/yolov4-p5RP_test.cfg, clear = 0 
+ 0 : compute_capability = 860, cudnn_half = 0, GPU: NVIDIA GeForce RTX 3080 
+net.optimized_memory = 0 
+mini_batch = 1, batch = 1, time_steps = 1, train = 1
+...
+when training:
+yolov4-p5RP_iou
+net.optimized_memory = 0 
+mini_batch = 1, batch = 16, time_steps = 1, train = 1 
+when testing:
+net.optimized_memory = 0 
+mini_batch = 1, batch = 1, time_steps = 1, train = 0 
+
+
+torch.no_grad()
+FPS:17.1
+
+keypointnet_ros
+W0518 18:06:05.780297 82007 device_context.cc:447] Please NOTE: device: 0, GPU Compute Capability: 8.6, Driver API Version: 11.4, Runtime API Version: 11.2
+W0518 18:06:05.796408 82007 device_context.cc:465] device: 0, cuDNN Version: 8.1.
+OSError: (External) CUDNN error(8), CUDNN_STATUS_EXECUTION_FAILED. 
+  [Hint: 'CUDNN_STATUS_EXECUTION_FAILED'.  The GPU program failed to execute. This is usually caused by a failure to launch some cuDNN kernel on the GPU, which can occur for multiple reasons.  To correct, check that the hardware, an appropriate version of the driver, and the cuDNN library are correctly installed.  Otherwise, this may indicate an internal error/bug in the library.  ] (at /paddle/paddle/fluid/operators/conv_cudnn_op.cu:349)
+  [operator < conv2d > error]
+
+[darknet_ros-1] process has died [pid 9123, exit code -9, cmd /home/dongyi/ur_ws/devel/lib/darknet_ros/darknet_ros camera/rgb/image_raw:=camera/rgb/image_raw __name:=darknet_ros __log:=/home/dongyi/.ros/log/799bcf5c-d677-11ec-89f5-dd64178528d5/darknet_ros-1.log].
+log file: /home/dongyi/.ros/log/799bcf5c-d677-11ec-89f5-dd64178528d5/darknet_ros-1*.log
+
+8/05 15:08:29,251 WARNING [140449149404928] (messenger-libusb.cpp:42) control_transfer returned error, index: 768, error: Resource temporarily unavailable, number: 11
+ 18/05 15:08:36,304 WARNING [140449149404928] (messenger-libusb.cpp:42) control_transfer returned error, index: 768, error: Resource temporarily unavailable, number: 11
+ 18/05 15:08:37,355 WARNING [140449149404928] (messenger-libusb.cpp:42) control_transfer returned error, index: 768, error: Resource temporarily unavailable, number: 11
+ 18/05 15:08:37,405 WARNING [140449149404928] (messenger-libusb.cpp:42) control_transfer returned error, index: 768, error: Resource temporarily unavailable, number: 11
+ 18/05 15:11:14,377 ERROR [140448468940544] (uvc-streamer.cpp:106) uvc streamer watchdog triggered on endpoint: 130
+ 18/05 15:11:18,992 ERROR [140448516286208] (uvc-streamer.cpp:106) uvc streamer watchdog triggered on endpoint: 132
+[camera/realsense2_camera-2] process has finished cleanly
+log file: /home/dongyi/.ros/log/799bcf5c-d677-11ec-89f5-dd64178528d5/camera-realsense2_camera-2*.log
+
+A: Possible solutions:
+	i) change lines below from YoloObjectDetector::setupNetwork in YoloObjectDetector.cpp, then I can load object dectetion, keypoint detection and direct classification model at the same time
+	  - net_ = load_network(cfgfile, weightfile, 0); // parse_network_cfg
+  	  + net_ = load_network_custom(cfgfile, weightfile, 0, 1); // parse_network_cfg_custom, set param.train =0
+  	f) Avoid "Same bounding boxes published multiple times #150" according to https://github.com/leggedrobotics/darknet_ros/issues/150#issuecomment-510285811
+	b) Reduce the fps of camera images stream
+	b) ros::Rate   $rostopic hz
+	   A: control the subsriber by adding ros::Rate and ros::spinOnce() in yolo_object_detector_node.cpp according to https://www.cnblogs.com/liu-fa/p/5925381.html
+	   
+	c) Adjust hyperparameter of darknet_ros (yolov4 version)
+	e) rosrun keypointnet_ros at first and roslaunch darknet_ros secondly
+	a) Limit the GPU/CPU memory of darknet_ros (yolov4 version)
+	d) Train a yolov4-p5 with smaller resolution (width=512, height=384)
+	
+	
+6) CPU memory explosion even using yolov3-tiny in darknet_rosv4 
+A: memory leak according to https://github.com/leggedrobotics/darknet_ros/issues/311 and its solution https://github.com/leggedrobotics/darknet_ros/pull/318/commits/2996594316a6ebb4b60b6e860bf0524ed794a6d5#
+Add free_image(buff_[buffIndex_]); in YoloObjectDetector::fetchInThread()

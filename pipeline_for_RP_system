@@ -1,0 +1,35 @@
+$ catkin_make -DPYTHON_EXECUTABLE=/home/dongyi/anaconda3/envs/paddle_env/bin/python
+$ source devel/setup.bash
+$ roslaunch realsense2_camera rs_camera.launch 
+$ rosrun rqt_reconfigure rqt_reconfigure
+Or $ rosrun dynamic_reconfigure dynparam get /camera/realsense2_camera/ color_fps
+   $ rosrun dynamic_reconfigure dynparam set /camera/realsense2_camera/ color_fps 10
+
+$ roslaunch darknet_ros yolo_v3_tiny_spb.launch
+or $ roslaunch darknet_ros yolov4-p5RP.launch
+# $ roscore  # call ros master 
+$ rosrun keypointnet_ros KeypointDetector.py
+
+
+light conditions
+turn on the light and draw the curtain: lux 114,115
+turn off the light and draw the curtain lux 1,2
+open the curtain a little lux 29
+fully open the curtains lux 200 - 384
+
+Improvements of YOLOv4-p5 + keypointNet
+Robust for cases below:
+1) clutter, partial occlusion and overlapped bounding boxes
+2) more accurate bounding boxes
+3) different type of shoe with different structure and states, reflective, high-heels
+4) box and paper
+
+Improve GPU CPU usage and memory
+1) Avoid loading training model as bug 5) in file BugReportofDarknet_rosv4
+2) Free the memory of past images/data as bug 6) in file BugReportofDarknet_rosv4
+3) Decrease the frequency of camera image publishing
+4) use ros::Rate to control the frequency of publishing and subscribing
+
+expert system or optimazation
+
+The order of compiling and run ROS programs?

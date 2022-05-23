@@ -10,25 +10,41 @@ A:
 2) change shebang #!usr/bin/python3 into yout python executable path 
 3) Not validated - to try adding set(Torch_DIR ".local/lib/python3.6/site-packages/torch/share/cmake/Torch") in CMakeList.txt as https://stackoverflow.com/questions/59916182/importerror-no-module-named-torch-in-ros-package
 4)  Not validated -to try $ rosrun keypointnet_ros KeypointDetector.py - DPYTHON_EXECUTABLE = /home/dongyi/anaconda3/envs/paddle_env/bin/python
-5) export PYTHONPATH=<你的路径>:$PYTHONPATH , https://zhuanlan.zhihu.com/p/104105709
+5) export PYTHONPATH=<your PATH>:$PYTHONPATH , https://zhuanlan.zhihu.com/p/104105709
 
 3. What can I wanna test the published topics despite that I didn't code subscriber? 
 A: Just use Rviz to visualize the msgs. Or 
 > cv2.imshow('image', img) 
 > while(cv2.waitKey(30)==27):
-> pass
+> 	 pass
 
 4. feed RGB into the network and cv2.show(BGR)
 5. KPImage didn't change - Because detection image topic didn't send image with bounding boxes successfully in real time. 
 6. Keypoint pred accuracy - Doesn't work simultaneously set all queuesize of all subscribers and publishersd in KeypointDetetor.py as queuesize=1 
 
-7. redundant keypoints - side and bottom states 抑制最小值，保证四个点; and combine threshold to report error state; manipulate the shoe with higher average keypoint confidence (keypoint*state confidence) at first.
+7. redundant keypoints - side and bottom states 抑制最小值，保证四个点; and combine threshold to report error state; 
+7.5 To manipulate the shoe with higher mainpulate point confidence (or average keypoint confidence, or keypoint*state confidence, or state confidence) at first. - as secondary manipulation order decider (e.g., for top+top, side+ side, bottom+bottom)
+
 8. As for keypoint-guided manipulation, judging mechanism (by shoe state) and recall the perception. 
 
-top-heel 点跳
-bounding boxes 交叉时关键点误差大 
-darknet_ros 时间长了，keypointnet_ros 不显示
+9. Darknet_rosv4 (YOLOv4) could improve the poor performance below 
+a) recognize top point as heel keypoint, and heel as top
+b) when shoes are placed next to each other, then could not ouput seperate bounding boxes for each shoe, or inaccurate keypoints based on partial overlapped bounding boxes.
+
+10. darknet_ros 时间长了，keypointnet_ros 不显示
 
 
+11. Bad callback ... tionError batch_size should be a positive integer.
+A: To avoid keypoint inference when no shoe was detected. DONE
+12  Add degree symbol ° when present the orientation. DONE
+
+13. check if darknet_ros v4 can publish the detection image successfully?  no, 
+
+ 
+
+realsense2_camera 
+ WARN] [1652872521.206534985]: Hardware Notification:Depth stream start failure,1.65287e+12,Error,Hardware Error
+ 
 
 
+ 

@@ -16,7 +16,7 @@
 #from datetime import datetime
 
 # cv and visualization modules
-import cv2
+# import cv2
 #import random
 import numpy as np
 #import pandas as pd
@@ -41,9 +41,11 @@ from utils.PCDataset import img_dataset # Dataset of Direct state Classification
 # import utils.PCDataset.img_dataset as img_dataset
 from utils.KPDataset import imgDataset  # Dataset of KeyPoint Detection
 #from utils.KPmetrics import cal_ed, cal_ed_val, cal_loss # Metrics of Keypoint Detection
-from models.resnet34_classification_paddle import Model_resnet34
-from models.keypointnet_deepest_paddle import KeypointNet_Deepest # GResNet-Deepest
-from inference.config import image_size, test_filelists2, pad_total, infer_mode, shuffle_key,num_workers_key, best_PCmodel_path,best_PCmodel_path2,best_KPmodel_path #,PC_transforms,KP_transforms
+#from models.resnet34_classification_paddle import Model_resnet34
+#from models.keypointnet_deepest_paddle import KeypointNet_Deepest # GResNet-Deepest
+from inference.config import image_size, pad_total, infer_mode, shuffle_key,num_workers_key #test_filelists2, best_PCmodel_path,best_PCmodel_path2,best_KPmodel_path 
+from inference.orientation_cal import img_to_object_r_coor, yaw_cal
+from sklearn.metrics.pairwise import euclidean_distances
 
 ### get dateloader
 def get_dataloader(test_filelists, dataset_, transforms_, infer_mode_, batchsize_, shuffle_, num_workers_):
@@ -121,7 +123,7 @@ def PCinfer(model1,model2, test_filelists2):  # model3,
 
 ## Keypoints Detection
 ### KP inference function
-def KPinfer(model, test_filelists2): #KP_test_dataset
+def KPinfer(model, test_filelists2, state_mode = False, orient_mode = False): # state_mode and orient_mode are post processing mode flag
     '''
     ### Keypoint dataloader v1
     KP_transforms = trans.Compose([
@@ -173,9 +175,17 @@ def KPinfer(model, test_filelists2): #KP_test_dataset
             logits = model(imgs)
             
             # post-processing - from heatmaps to keypoints       
-            confident_kps = np.zeros((logits.shape[0],15))  # keypoints with confidence, i.e., [toe_c, toe_x, toe_y, heel_c ...,  inside ..., outside ..., topline ... ] 
+            confident_kps = np.zeros((logits.shape[0],logits.shape[1]*3))  # (logits.shape[0],15) keypoints with confidence, i.e., [toe_c, toe_x, toe_y, heel_c ...,  inside ..., outside ..., topline ... ] 
             h= logits.shape[2]
             w= logits.shape[3]
+            
+            ## yaws list for Post processing - calculate orientations
+            orientations = np.zeros((logits.shape[0],1)) # yaws
+            ## states list
+            states = np.zeros(logits.shape[0]).astype(int)
+            kp_thresh = 0.794
+            ed_c = 0.855
+
             for i in range(logits.shape[0]):  # batchsize
                 for j in range(logits.shape[1]):  # logit.shape[1]==5
                     #if logits[i][j].max() >= 0.5: # 0.794 for TestingSet
@@ -208,8 +218,65 @@ def KPinfer(model, test_filelists2): #KP_test_dataset
                     confident_kps[i][3*j] = kc_p
                     confident_kps[i][3*j+1] = fx 
                     confident_kps[i][3*j+2] = fy
-    
-    return confident_kps # KPlogits, KPimgs, confident_kps
+                
+                if orient_mode == True:
+                    ## Post processing - calculate orientations, including yaw 
+                    kx_toe=  np.where(logits[i][0]==logits[i][0].max())[1][0]  # predicted toe keypoint
+                    ky_toe=  np.where(logits[i][0]==logits[i][0].max())[0][0]
+                    kx_heel= np.where(logits[i][1]==logits[i][1].max())[1][0]  # predicted heel keypoint
+                    ky_heel= np.where(logits[i][1]==logits[i][1].max())[0][0]
+        
+                    Toe  = img_to_object_r_coor(w,h,kx_toe, ky_toe)
+                    Heel = img_to_object_r_coor(w,h,kx_heel,ky_heel)
+                    HT = Toe - Heel
+                    # HT0 =  np.array([0, 10]) # (z1, x1)
+                    HT0 =  np.array([10, 0]) # (x1, y1)
+                    yaw_pred = yaw_cal(HT0, HT)
+                    orientations[i][0]= yaw_pred
+                    ##
+                
+                if state_mode == True:
+                    kp_peaks = np.array([logits[i][0].max(), logits[i][1].max(), logits[i][2].max(),logits[i][3].max(),logits[i][4].max()]) # the heatmap max values of 5 keypoints at toe, heel, inside, outside, topline
+                    # method 6: kp_thresh + argmin + relative euclidean_distance # optimal ed_c=0.855, kp_thresh = 0.794 for method 6, then macro_precision=0.9547 weighted_precision=0.9457
+                    kx_i= np.where(logits[i][2]==logits[i][2].max())[1][0]  # predicted inside keypoint
+                    ky_i= np.where(logits[i][2]==logits[i][2].max())[0][0]
+                    kx_o= np.where(logits[i][3]==logits[i][3].max())[1][0]  # predicted outside keypoint
+                    ky_o= np.where(logits[i][3]==logits[i][3].max())[0][0]
+                
+                    # calculate euclidean_distances by normalizad kx, ky
+                    ed_io = euclidean_distances([[kx_i/w, ky_i/h]],[[kx_o/w, ky_o/h]]) # 2D arrays are expected 
+                    
+                    kx_toe= np.where(logits[i][0]==logits[i][0].max())[1][0]  # predicted toe keypoint
+                    ky_toe= np.where(logits[i][0]==logits[i][0].max())[0][0]
+                    ed_it = euclidean_distances([[kx_i/w, ky_i/h]],[[kx_toe/w, ky_toe/h]]) # 2D arrays are expected 
+                    ed_ot = euclidean_distances([[kx_o/w, ky_o/h]],[[kx_toe/w, ky_toe/h]]) # 2D arrays are expected
+                    ed_thresh = min(ed_it, ed_ot)*ed_c # ed_c coefficient
+                    
+                    if kp_peaks.min() < kp_thresh:
+                        if kp_peaks.argmin() == 4:
+                            states[i]= 2 # 2 stands for bottom 
+                        elif kp_peaks.argmin() == 3 or kp_peaks.argmin() == 2:
+                            states[i]= 1 # 1 stands for side
+                        else:  # kp_peaks.argmin() == 0 or kp_peaks.argmin() == 1 
+                            states[i]= 0 
+                    else:  # kp_peaks.min() > kp_thresh or  kp_peaks.min() = kp_thresh
+                        if ed_io < ed_thresh:  
+                            states[i]= 1 # 1 stands for side
+                        else: # ed_io >= ed_thresh
+                            states[i]= 0  # 0 stands for top
+                    
+                
+    if orient_mode == True and state_mode == True:
+        return confident_kps, orientations, states
+    elif orient_mode == True and state_mode == False:
+        return confident_kps, orientations
+    elif orient_mode == False and state_mode == True:
+        return confident_kps, states
+    else: # orient_mode == False and state_mode == False:
+        return confident_kps
+        
+    # return confident_kps, orientations # KPlogits, KPimgs, confident_kps
+
 
 '''
 ## Call PCinfer(), input test_filelists2, output state_classes
@@ -223,8 +290,6 @@ def CallKPinfer(test_filelists2):
     return confident_kps
 '''
 
-## make Keypoints.msg, Keypoint.msg (confidence/probability,x,y,String state), ShoeStates.msg/ShoePoseClass.msg in KD_ros/KD_ros_msgs/msg
-### considering the extensibility, use a keypoints[] class array instead of an array/list consists of all the info of keypoints 
 
 #import argparse
 #def parse_args():
@@ -236,98 +301,3 @@ def CallKPinfer(test_filelists2):
 #    args = parser.parse_args()
 #    return args
 
-
-if __name__ == '__main__': # avoid automatic running below lines when this .py file is imported by others.    
-    ### image subscriber 
-    if infer_mode == 'test':     # test_filelists2 is an image name list when self.mode == "test"
-        test_filelists2 = ['TestingSet/IMG_20210302_151345.jpg', 'TestingSet/IMG_20211207_114000.jpg']
-    elif infer_mode == 'deploy': # test_filelists2 is an image list when self.mode == "deploy"
-        test_filelists2 =  [cv2.imread(i) for i in ['TestingSet/IMG_20210302_151345.jpg', 'TestingSet/IMG_20211207_114000.jpg']]
-    else:
-        print('The model %s is to be updated soon.'%infer_mode)
-        
-    batchsize = len(test_filelists2)
-    
-    
-    '''
-    ### Loading Direct State Classification model v1
-    best_PCmodel_path  = "trained_models/ShoePoseClassificationResNet/PC_ResNet34_0.9812.pdparams" # 0.5*0.9812 + 0.5*0.9801
-    best_PCmodel_path2 = "trained_models/ShoePoseClassificationResNet/PC_ResNet34_0.9801.pdparams" # 0.5*0.9812 + 0.5*0.9801 
-    PCmodel = Model_resnet34()
-    PC_para_state_dict = paddle.load(best_PCmodel_path)
-    PCmodel.set_state_dict(PC_para_state_dict)
-    # PCmodel2= None
-    PCmodel2= Model_resnet34()
-    PC_para_state_dict2 = paddle.load(best_PCmodel_path2)
-    PCmodel2.set_state_dict(PC_para_state_dict2)
-    '''
-    ### Loading Direct State Classification model v2
-    PCmodel = Model_resnet34()
-    PCmodel = get_trained_model(PCmodel, best_PCmodel_path)
-    if best_PCmodel_path2 == '' or best_PCmodel_path2 == None:
-        PCmodel2= None
-    else:
-        PCmodel2= Model_resnet34()
-        PCmodel2= get_trained_model(PCmodel2,best_PCmodel_path2)
-    
-    ### Infer state class
-    state_classes =PCinfer(PCmodel,PCmodel2, test_filelists2)
-    
-    
-    '''
-    ### Loading keypoint detection model v1
-    KPmodel= KeypointNet_Deepest(input_channels=3, output_channels=5, channel_size=32,dropout=True, prob=0)
-    best_KPmodel_path = "trained_models/8_3Heatmap_GResNet-Deepest_C32_no_TestSet_finetune_220315_1219/best_model_0.016625/model.pdparams"
-    #best_KPmodel_path = "trained_models/2DShoeKeypointDetection/2DKeypointNet_0.016625.pdparams"
-    KP_para_state_dict = paddle.load(best_KPmodel_path)
-    KPmodel.set_state_dict(KP_para_state_dict)
-    '''
-    ### Loading keypoint detection model v2
-    KPmodel= KeypointNet_Deepest(input_channels=3, output_channels=5, channel_size=32,dropout=True, prob=0)
-    KPmodel= get_trained_model(KPmodel, best_KPmodel_path)
-    
-    ### Infer keypoints with confidence in the format of [toe_c, toe_x, toe_y, heel_c ...,  inside ..., outside ..., topline ... ] 
-    confident_kps= KPinfer(KPmodel,test_filelists2)  #the size of confident_kps is CroppeedImg num x 15
-    
-
-    ### Visualizing predicted Keypoints
-    # plt.figure(figsize=(20, 20))
-    colors =[(136,32,29), (0,0,192), (160,48,112),(171,171,175),(233,44,242)] # BGR
-    # colors = ['#1D2088', '#C00000','#7030A0','#AFABAB', '#F22CE9'] # blue, red, purple, grey, magenta
-    # For RGB, [(29,32,136), (192,0,0), (112,48,160),(175,171,171),(242,44,233)]
-    # For BGR, [(136,32,29), (0,0,192), (160,48,112),(171,171,175),(233,44,242)]
-    states= ['top','side','bottom'] # 0,1,2 represents top, side, bottom state respectively
-    keypoint_classes =  ['toe','heel','inside','outside','topline']
-    for i in range(batchsize):
-        if infer_mode == 'test':
-            img =  cv2.imread(test_filelists2[i])[:, :, ::-1]
-        elif infer_mode == 'deploy':
-            img= test_filelists2[i] # [:, :, ::-1] # BGR -> RGB
-        else:
-            print('The model %s is to be updated soon'%infer_mode)
-        
-        '''
-        # Matplotlib visulization
-        plt.subplot(1,batchsize,i+1)
-        plt.imshow(img)
-        for j in range(confident_kps.shape[1]//3):
-            if confident_kps[i][3*j]>0.5:
-                plt.plot(confident_kps[i][3*j+1]+0.5,confident_kps[i][3*j+2]+0.5,'.', color=colors[j], markersize=16) # +0.5 means centre of pixel
-                plt.text(confident_kps[i][3*j+1]+0.5,confident_kps[i][3*j+2]+0.5, "({:.2f},{:.2f})".format(confident_kps[i][3*j+1],confident_kps[i][3*j+2]))
-        '''
-        # opencv visualization
-        for j in range(confident_kps.shape[1]//3):
-            if confident_kps[i][3*j]>0.5:
-                img =cv2.circle(img, (round(confident_kps[i][3*j+1]), round(confident_kps[i][3*j+2])), 8, colors[j], -1)
-                img=cv2.putText(img, keypoint_classes[j], (round(confident_kps[i][3*j+1]), round(confident_kps[i][3*j+2])), cv2.FONT_HERSHEY_SIMPLEX , 1, colors[j], 2, cv2.LINE_AA)
-        img=cv2.putText(img, states[state_classes[i]], (10, 50), cv2.FONT_HERSHEY_SIMPLEX , 2, (0,255,0), 2, cv2.LINE_AA)
-        
-        cv2.namedWindow("image %d"%i)
-        cv2.imshow("image %d"%i, img)
-        cv2.waitKey(5000)
-        cv2.destroyAllWindows()
-        ### TO DO -  state class-based keypoint outputs
-    ### Outputing predicted state
-    
-    # for i in range(batchsize):
-    #     print(states[state_classes[i]])
