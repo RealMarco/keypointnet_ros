@@ -30,4 +30,16 @@
     5. Is it essential to adjust the /launch/darknet_ros.lauch? 
     6. recompile 
 5. What about using KeypointNet to train and infer the states.
-6. Train resnet34 classification model without @paddle.jit.to_static to acuquire a model with smaller size
+    1. Problem 1 is that the penultimate layer is 256×256×3 (512×512×3), which is so huge. 
+    2. Problem 2 is how to concatenate the heatmap output and regression output layers in one network.
+6. Training classification by using a separate KeypointNet
+7. Initial the input by Gaussian mixture models, try to predict keypoints by one heatmap in multiple-shoe scenario with other kinds of object. (YOLO5-Keypoints)
+    0. Refer to YOLO-segmentation 
+    1. Problem 1 is to improve the keypoint-based states classification. Maybe directly use YOLO to classify the states.
+8. Other easy-to-use block
+9. Transformer, non-local network.
+10. YOLOR
+8. Train resnet34 classification model without @paddle.jit.to_static to acuquire a model with smaller size
+Keypoint detection in public dataset
+Table. 2. To compare shoe keypoint detection algorithms (efficiency, the size of the dataset)? 
+
