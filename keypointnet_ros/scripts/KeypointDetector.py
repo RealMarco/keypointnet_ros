@@ -31,7 +31,7 @@ from cv_bridge import CvBridge, CvBridgeError
 from darknet_ros_msgs.msg import BoundingBoxes, BoundingBox # , ObjectCount
 from std_msgs.msg import String
 from sensor_msgs.msg import Image # ?
-from keypointnet_ros_msgs.msg import Keypoints, Keypoint
+from keypointnet_ros_msgs.msg import Keypoint, Keypoints, KeyObjects
 
 from models.resnet34_classification_paddle import Model_resnet34
 from models.keypointnet_deepest_paddle import KeypointNet_Deepest 
@@ -143,6 +143,7 @@ def keypoint_publisher():
         # create msg
         global ShoeBbxes, KPImage, state_classes, confident_kps, orientations, states, OriImage, CroppedXYmin, CroppedXYmax #ODImage
         KPImage = OriImage #ODImage
+        KeyShoes = KeyObjects()  # Keypoints[] objects
         for i in range(len(confident_kps)): # number of shoeBBxes or CroppeedImgs
             kp_state =  Keypoints() # keypoints with state
             #kp_state.state = shoe_states[states[i]]  # for keypoint-based classification
@@ -180,11 +181,16 @@ def keypoint_publisher():
             KPImage=cv2.rectangle(KPImage, (CroppedXYmin[i][0], CroppedXYmin[i][1]), (CroppedXYmax[i][0],CroppedXYmax[i][1]), (0,255,0),1) # (img,(left, top),(right, bottom), color, thickness)
             KPImage=cv2.putText(KPImage, "shoe D-%s KP-%s"%(shoe_states[state_classes[i]], kp_state.state), (CroppedXYmin[i][0],CroppedXYmin[i][1]-24), cv2.FONT_HERSHEY_SIMPLEX , 0.6, (0,255,0), 2, cv2.LINE_AA)
             #KPImage=cv2.putText(KPImage, "shoe KP-%s"%kp_state.state, (CroppedXYmin[i][0],CroppedXYmin[i][1]-24), cv2.FONT_HERSHEY_SIMPLEX , 0.6, (0,255,0), 2, cv2.LINE_AA) 
-            KPImage=cv2.putText(KPImage, 'alpha = %.2f°'%kp_state.alpha, (CroppedXYmin[i][0],CroppedXYmin[i][1]-8), cv2.FONT_HERSHEY_SIMPLEX , 0.5, (0,255,0), 1, cv2.LINE_AA) # ord('°')=176, chr(176)='°'
+            KPImage=cv2.putText(KPImage, 'alpha = %.2f'%kp_state.alpha, (CroppedXYmin[i][0],CroppedXYmin[i][1]-8), cv2.FONT_HERSHEY_SIMPLEX , 0.5, (0,255,0), 1, cv2.LINE_AA) # ord('°')=176, chr(176)='°'
             # putText(Image, text, bottom-left corner, font, fontScale, color, thickness, lineType, bottomLeftOrigin)
             # publish keypoints with state 
-            kp_state_publisher.publish(kp_state)
-            rospy.loginfo("Publishing shoe keypoints with state %s"%(kp_state.state))
+            
+            KeyShoes.objects.append(kp_state)
+            #kp_state_publisher.publish(kp_state)
+            #rospy.loginfo("Publishing shoe keypoints with state %s"%(kp_state.state))
+        # publish keypoints of shoes
+        kp_state_publisher.publish(KeyShoes)
+        rospy.loginfo("Publishing the keypoints of %d shoes"%(len(KeyShoes.objects)))
         
         # publisher Present the keypoints and shoe class on ODImage, similar to the topic /darknet_ros/detection_image in object detection
         # KPImage =  np.asarray(KPImage)
@@ -202,9 +208,9 @@ def keypoint_publisher():
 
 if __name__ == "__main__":# avoid automatic running below lines when this .py file is imported by others.
 #    try:
-    OriImage = np.zeros((4,4))
+    OriImage = np.zeros((2,2,3))
     # ODImage  = np.zeros((2,2)) 
-    KPImage =  np.ones((2,2))
+    KPImage =  np.ones((2,2,3))
     ShoeBbxes = []
     CroppedImgs = []
     CroppedXYmin = []  # record the [[xmin, ymin],] for coordinate transferring 
@@ -239,7 +245,7 @@ if __name__ == "__main__":# avoid automatic running below lines when this .py fi
     rospy.init_node("keypointnet_ros", anonymous=True)
     #rospy.init_node('keypointnet_ros')
     # Registration: Create a publisher, and publish a topic named person_info with test_topic.msg.Person message, queue size =4
-    kp_state_publisher= rospy.Publisher('/keypointnet_ros/state_keypoints', Keypoints, queue_size=1) # latch =
+    kp_state_publisher= rospy.Publisher('/keypointnet_ros/state_keypoints', KeyObjects, queue_size=1) # latch =
     kp_img_publisher  = rospy.Publisher('/keypointnet_ros/keypoint_image', Image, queue_size=1)
     rospy.sleep(0.2) # wait for finishing node registration, or the 1st msg wouldn't be published
     

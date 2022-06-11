@@ -33,3 +33,10 @@ Improve GPU CPU usage and memory
 expert system or optimazation
 
 The order of compiling and run ROS programs?
+
+
+# Dongyi's robot system
+roslaunch realsense2_camera rs_camera.launch align_depth:=true
+roslaunch darknet_ros yolov4-p5RP.launch
+rosrun keypointnet_ros KeypointDetector.py
+rosrun ur_smach visionInterface.py

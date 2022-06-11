@@ -45,6 +45,7 @@ A: To avoid keypoint inference when no shoe was detected. DONE
 realsense2_camera 
  WARN] [1652872521.206534985]: Hardware Notification:Depth stream start failure,1.65287e+12,Error,Hardware Error
  
-
+14. OPENCV 3 in package ur_vision report error 
+in CMakeList.txt of ur_vision, the find...(...OPENCV 3 ...) was changed to find...(... OPENCV ...) 
 
  

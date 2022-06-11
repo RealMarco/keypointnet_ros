@@ -47,6 +47,8 @@ $ catkin_make -DPYTHON_EXECUTABLE=/usr/bin/python3   # instead of catkin_make [E
 2) cv.circle(,(x,y),) plt.plot(x+0.5, y+0.5)
 3) dive into rospy, package.xml, CMakelist.txt
 
+To improve the keypoint detection of reflective shoe like leather.
+
 
 
 
