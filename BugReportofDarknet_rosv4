@@ -1,6 +1,19 @@
 darknet_ros (yolov4) errors
 
+# The CUDA and cuDNN of system must be installed
+Refer to 
+https://github.com/tom13133/darknet_ros
+https://github.com/AlexeyAB/darknet/tree/08bc0c9373158da6c42f11b1359ca2c017cef1b5
+https://github.com/leggedrobotics/darknet_ros/
+
+
 For $ catkin_make
+0) mutiple definition of "main" in darknet/src/yolo_console_dll.cpp and darknet/src/darknet.c 
+A: To check if the CUDA and cuDNN of system have been installed, as yolo_console_dll.cpp was mentioned in darknet_ros/CMakeLists.txt
+
+0.5) When darknet_ros was roslaunched, the FPS of yolo detector is too high (about 24000 fps)
+The fps of camera or yolo detector was not controlled.
+
 1) make[2]: *** No rule to make target 'darknet_ros/darknet/src/network_kernels. need by '/darknet_ros/darknet_ros/CMakeFiles/...'
 A: 删除编译后生成的 build/darknet_ros/darknet_ros/CMakeFiles里的相关文件夹
 

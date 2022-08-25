@@ -41,7 +41,7 @@ from inference.config import best_PCmodel_path, best_PCmodel_path2, best_KPmodel
 # References:
 # http://wiki.ros.org/cv_bridge/Tutorials/ConvertingBetweenROSImagesAndOpenCVImagesPython
 # https://gitlab.com/neutron-nuaa/robot-arm/-/tree/main/Paper_manipulation_and_shoe_packaging/darknet_ros
-# https://www.paddlepaddle.org.cn/documentation/docs
+# paddle 2.2.2 https://www.paddlepaddle.org.cn/documentation/docs
 # http://wiki.ros.org/rospy
 # http://wiki.ros.org/rospy_tutorials/Tutorials/
 # https://docs.ros.org/en/melodic/api/rospy/html/
@@ -149,7 +149,6 @@ def keypoint_publisher():
             #kp_state.state = shoe_states[states[i]]  # for keypoint-based classification
             kp_state.state = shoe_states[state_classes[i]] # for direct state classification
             kp_state.alpha = orientations[i][0]
-            kp =Keypoint()
             
             c_list = []
             for j in range(confident_kps.shape[1]//3):
@@ -164,6 +163,7 @@ def keypoint_publisher():
             # kp_state.keypoints ...
             for j in range(confident_kps.shape[1]//3):
                 #if confident_kps[i][3*j]>0.5: # confidence threshold
+                kp =Keypoint()
                 if j != minc_j: # output keypoints according to the state
             	    kp.confidence = confident_kps[i][3*j]
     	            # transfer from cropped image coordinate system to original image coordinate system
