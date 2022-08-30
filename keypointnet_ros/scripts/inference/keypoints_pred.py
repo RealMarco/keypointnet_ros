@@ -43,16 +43,16 @@ from utils.KPDataset import imgDataset  # Dataset of KeyPoint Detection
 #from utils.KPmetrics import cal_ed, cal_ed_val, cal_loss # Metrics of Keypoint Detection
 #from models.resnet34_classification_paddle import Model_resnet34
 #from models.keypointnet_deepest_paddle import KeypointNet_Deepest # GResNet-Deepest
-from inference.config import image_size, pad_total, infer_mode, shuffle_key,num_workers_key #test_filelists2, best_PCmodel_path,best_PCmodel_path2,best_KPmodel_path 
+from inference.config import image_size, pad_total, label_file, infer_mode, shuffle_key,num_workers_key #test_filelists2, best_PCmodel_path,best_PCmodel_path2,best_KPmodel_path 
 from inference.orientation_cal import img_to_object_r_coor, yaw_cal
 from sklearn.metrics.pairwise import euclidean_distances
 
 ### get dateloader
-def get_dataloader(test_filelists, dataset_, transforms_, infer_mode_, batchsize_, shuffle_, num_workers_):
+def get_dataloader(test_filelists, dataset_, transforms_, label_file_, infer_mode_, batchsize_, shuffle_, num_workers_):
     test_dataset = dataset_(image_file = test_filelists,
                         # dataset_root=testset_root, 
                         img_transforms=transforms_,
-#                        label_file="ShoesStatesTestingGT.xls",
+                        label_file=label_file_,
                         mode=infer_mode_)   #  ShoesStatesTrainingGT.xls
 
     test_loader = paddle.io.DataLoader(
@@ -99,7 +99,7 @@ def PCinfer(model1,model2, test_filelists2):  # model3,
         trans.PaddedSquare('constant'),  # may use 'edge' mode when testing in real scenes.  'constant'    
         trans.Resize((image_size//2, image_size//2))
         ])
-    PC_test_loader = get_dataloader(test_filelists2, img_dataset,PC_transforms, infer_mode, batchsize, shuffle_key, num_workers_key)
+    PC_test_loader = get_dataloader(test_filelists2, img_dataset,PC_transforms, label_file, infer_mode, batchsize, shuffle_key, num_workers_key)
     
     model1.eval()
     if model2 != None:
@@ -151,7 +151,7 @@ def KPinfer(model, test_filelists2, state_mode = False, orient_mode = False): # 
         trans.PaddedSquare('constant'),  # may use 'edge' mode when testing in real scenes. 
         trans.RandomPadWithoutPoints(pad_thresh_l=pad_total, pad_thresh_h=pad_total)  # accroding to CropbyBBxinDarknet; # accroding to CropbyBBxinDarknet  pad_thresh_l=0.316, pad_thresh_h=0.412
     ])
-    KP_test_loader = get_dataloader(test_filelists2, imgDataset, KP_transforms, infer_mode, batchsize, shuffle_key, num_workers_key)
+    KP_test_loader = get_dataloader(test_filelists2, imgDataset, KP_transforms, label_file, infer_mode, batchsize, shuffle_key, num_workers_key)
     
     model.eval()
     logits = []

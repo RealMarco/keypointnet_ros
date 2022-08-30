@@ -4,11 +4,12 @@
 
 ## Files Description  
 1. [/keypointnet_ros/scripts/](keypointnet_ros/scripts/) includes python scripts   
-    1. [KeypointDetector.py](keypointnet_ros/scripts/KeypointDetector.py) achieves fucntions below by multi-threads  
+    1. [KeypointDetector.py](keypointnet_ros/scripts/KeypointDetector.py) works in ROS environment and achieves fucntions below by multi-threads  
         - Subscribing msgs in topic '/camera/color/image_raw', '/darknet_ros/bounding_boxes', '/darknet_ros/detection_image'  
         - Inferring the keypoints, states, (poses) of raw camera images by call functions in keypoints_pred.py  
-        - Publishing msgs in topic '/keypointnet_ros/state_keypoints', '/keypointnet_ros/keypoint_image'  
-    2. [keypoints_pred.py](keypointnet_ros/scripts/keypoints_pred.py) can accomplish the inference of keypoints and states in deployment and testing segment.  
+        - Publishing msgs in topic '/keypointnet_ros/state_keypoints', '/keypointnet_ros/keypoint_image' 
+    2. [keypoints_test.py](keypointnet_ros/scripts/keypoints_test.py) works in python environment and tests the keypoint detection performance by a small batch of images. 
+    2. [keypoints_pred.py](keypointnet_ros/scripts/inference/keypoints_pred.py) can accomplish the inference of keypoints and states in deployment and testing segment. It works for KeypointDetector.py anf keypoints_test.py. 
     3. [/inference/config.py](keypointnet_ros/scripts/inference/config.py) is the configuration file of DL models, which should be input and adjusted by users.  
     4. [/utils/KPDataset.py](keypointnet_ros/scripts/utils/KPDataset.py) and [/utils/PCDataset.py](keypointnet_ros/scripts/utils/PCDataset.py) read and augment date, then generate dataset classes to make them understandable for PaddlePaddle.  
     5. [/models/](keypointnet_ros/scripts/models/) and /trained_models/ provide network (model) architecture and pre-trained weights respectively.  
