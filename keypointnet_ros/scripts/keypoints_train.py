@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/home/dongyi/anaconda3/envs/paddle_env/bin/python
 # -*- coding: utf-8 -*-
 """
 #!/home/dongyi/anaconda3/envs/paddle_env/bin/python
@@ -7,7 +7,10 @@ Created on Tue Aug 30 12:51:52 2022
 @author: marco
 """
 import sys
-#sys.path.append('/home/dongyi/ur_ws/src/keypointnet_ros/keypointnet_ros/scripts')
+sys.path.append('/home/dongyi/ur_ws_vision/src/keypointnet_ros/keypointnet_ros/scripts')
+# sys.path.append('/home/dongyi/anaconda3/envs/paddle_env/lib/python3.9/site-packages')
+print (sys.path)
+sys.path.remove('/usr/lib/python3/dist-packages')
 import os
 import numpy as np
 # import logging

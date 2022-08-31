@@ -5,3 +5,4 @@ keypointnet_ros/scripts/.ipynb_checkpoints
 *.pdparams
 keypointnet_ros/scripts/*/__pycache__/
 keypointnet_ros/scripts/__pycache__/
+*pyc

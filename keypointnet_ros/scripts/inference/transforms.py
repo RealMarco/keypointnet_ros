@@ -11,7 +11,7 @@ import warnings
 import cv2
 import numpy as np
 
-import functional as F
+import inference.functional as F
 
 __all__ = [
     "Compose", "ComposeWithPoint", "Resize", "Scale",

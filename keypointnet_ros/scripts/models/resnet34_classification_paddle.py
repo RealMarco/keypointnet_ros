@@ -1,4 +1,7 @@
-#!/home/dongyi/anaconda3/envs/paddle_env/bin/python3
+#!/home/dongyi/anaconda3/envs/paddle_env/bin/python
+# import sys
+# sys.path.append('/home/dongyi/anaconda3/envs/paddle_env/lib/python3.9/site-packages')
+
 import paddle
 import paddle.nn as nn
 from paddle.vision.models import resnet34 # ,resnet50,resnet18

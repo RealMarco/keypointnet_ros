@@ -1,4 +1,4 @@
-#!/home/dongyi/anaconda3/envs/paddle_env/bin/python3
+#!/home/dongyi/anaconda3/envs/paddle_env/bin/python
 # -*- coding: utf-8 -*-
 # 
 """
@@ -20,13 +20,21 @@ string kp_class
 #import os
 #import threading
 import sys
-sys.path.append('/home/dongyi/ur_ws/src/keypointnet_ros/keypointnet_ros/scripts')
+sys.path.append('/home/dongyi/ur_ws_vision/src/keypointnet_ros/keypointnet_ros/scripts')
+# sys.path.append('/home/dongyi/anaconda3/envs/paddle_env/lib/python3.9/site-packages')
+print (sys.path)
+sys.path.remove('/usr/lib/python3/dist-packages')
+
+# sys.path.remove('/usr/lib/python3/dist-packages')
+# sys.path.remove('/opt/ros/noetic/lib/python3/dist-packages')
+
+import rospy 
+import numpy as np 
+# import sys
+#path.sys.append('/home/dongyi/anaconda3/envs/paddle_env/lib/python3.9/site-packages')
 from threading import Thread
 
 import cv2
-import numpy as np 
-
-import rospy 
 from cv_bridge import CvBridge, CvBridgeError
 from darknet_ros_msgs.msg import BoundingBoxes, BoundingBox # , ObjectCount
 from std_msgs.msg import String
@@ -41,7 +49,7 @@ from inference.config import best_PCmodel_path, best_PCmodel_path2, best_KPmodel
 # References:
 # http://wiki.ros.org/cv_bridge/Tutorials/ConvertingBetweenROSImagesAndOpenCVImagesPython
 # https://gitlab.com/neutron-nuaa/robot-arm/-/tree/main/Paper_manipulation_and_shoe_packaging/darknet_ros
-# paddle 2.2.2 https://www.paddlepaddle.org.cn/documentation/docs
+# https://www.paddlepaddle.org.cn/documentation/docs
 # http://wiki.ros.org/rospy
 # http://wiki.ros.org/rospy_tutorials/Tutorials/
 # https://docs.ros.org/en/melodic/api/rospy/html/
@@ -174,14 +182,14 @@ def keypoint_publisher():
     	            kp_state.keypoints.append(kp)
     	        
     	            #Visualize keypoints
-    	            KPImage =cv2.circle(KPImage, (kp.x, kp.y), 6, kp_colors[j], -1) # circle(img, point_center, radius, BGR, thickness
+    	            KPImage =cv2.circle(KPImage, (kp.x, kp.y), 10, kp_colors[j], -1) # circle(img, point_center, radius, RGB, thickness
     	            KPImage=cv2.putText(KPImage, kp.kp_class+str(round(kp.confidence,2)), (kp.x+6, kp.y-6), cv2.FONT_HERSHEY_SIMPLEX , 0.5, kp_colors[j], 1, cv2.LINE_AA) # kp.kp_class keypoint_classes[j]
                     
             #Visualize state
-            KPImage=cv2.rectangle(KPImage, (CroppedXYmin[i][0], CroppedXYmin[i][1]), (CroppedXYmax[i][0],CroppedXYmax[i][1]), (0,255,0),1) # (img,(left, top),(right, bottom), color, thickness)
-            KPImage=cv2.putText(KPImage, "shoe D-%s KP-%s"%(shoe_states[state_classes[i]], kp_state.state), (CroppedXYmin[i][0],CroppedXYmin[i][1]-24), cv2.FONT_HERSHEY_SIMPLEX , 0.6, (0,255,0), 2, cv2.LINE_AA)
+            KPImage=cv2.rectangle(KPImage, (CroppedXYmin[i][0], CroppedXYmin[i][1]), (CroppedXYmax[i][0],CroppedXYmax[i][1]), (0,255,0),2) # (img,(left, top),(right, bottom), color, thickness)
+            KPImage=cv2.putText(KPImage, "shoe DL-%s KP-%s"%(shoe_states[state_classes[i]], kp_state.state), (CroppedXYmin[i][0],CroppedXYmin[i][1]-24), cv2.FONT_HERSHEY_SIMPLEX , 0.6, (0,255,0), 2, cv2.LINE_AA)
             #KPImage=cv2.putText(KPImage, "shoe KP-%s"%kp_state.state, (CroppedXYmin[i][0],CroppedXYmin[i][1]-24), cv2.FONT_HERSHEY_SIMPLEX , 0.6, (0,255,0), 2, cv2.LINE_AA) 
-            KPImage=cv2.putText(KPImage, 'alpha = %.2f'%kp_state.alpha, (CroppedXYmin[i][0],CroppedXYmin[i][1]-8), cv2.FONT_HERSHEY_SIMPLEX , 0.5, (0,255,0), 1, cv2.LINE_AA) # ord('°')=176, chr(176)='°'
+            KPImage=cv2.putText(KPImage, 'yaw = %.2f'%kp_state.alpha, (CroppedXYmin[i][0],CroppedXYmin[i][1]-8), cv2.FONT_HERSHEY_SIMPLEX , 0.5, (0,255,0), 1, cv2.LINE_AA) # ord('°')=176, chr(176)='°'
             # putText(Image, text, bottom-left corner, font, fontScale, color, thickness, lineType, bottomLeftOrigin)
             # publish keypoints with state 
             
@@ -221,7 +229,8 @@ if __name__ == "__main__":# avoid automatic running below lines when this .py fi
     orientations = []
     shoe_states= ['top','side','bottom']
     keypoint_classes =  ['toe','heel','inside','outside','topline']
-    kp_colors = [(136,32,29), (0,0,192), (160,48,112),(171,171,175),(233,44,242)] # BGR
+    # kp_colors = [(136,32,29), (0,0,192), (160,48,112),(171,171,175),(233,44,242)] # RGB
+    kp_colors = [(136,32,29), (0,0,192), (139,69,19),(136,136,136),(233,44,242)] # RGB
     cvbridge = CvBridge()
 #        test_i = Image()
 #        #test_i.
