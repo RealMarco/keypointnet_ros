@@ -39,7 +39,7 @@
 8. Other easy-to-use block
 9. Transformer, non-local network.
 10. YOLOR
-8. Train resnet34 classification model without @paddle.jit.to_static to acuquire a model with smaller size
+11. Train resnet34 classification model without @paddle.jit.to_static to acuquire a model with smaller size
 Keypoint detection in public dataset
 Table. 2. To compare shoe keypoint detection algorithms (efficiency, the size of the dataset)? 
 
