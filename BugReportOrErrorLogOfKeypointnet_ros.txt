@@ -1,3 +1,15 @@
+$ catkin_make -DPYTHON_EXECUTABLE=/home/dongyi/anaconda3/envs/paddle_env/bin/python
+Or # compile python-related packages in your virtual environment
+   $ conda activate your_env_name  
+   $ catkin_make
+0. ERROR: no module named catkin_pkg
+   ERROR: -- Could NOT find PY_em (missing: PY_EM) 
+   ModuleNotFoundError: No module named 'rospkg'
+R: The ROS was installed in system python, so it couldn't be found when use python in paddle_env to complie
+A: in ~/.bashrc, add this line below to add catkin_pkg in PYTHONPATH
+export PYTHONPATH=/usr/lib/python3/dist-packages:PYTHONPATH
+
+
 1. no module named keypoint_pred 
 A: move keypoint_pred.py in a python module folder instead of using it as a python package at current executing path, Or
 import sys
@@ -45,6 +57,7 @@ A: To avoid keypoint inference when no shoe was detected. DONE
 realsense2_camera 
  WARN] [1652872521.206534985]: Hardware Notification:Depth stream start failure,1.65287e+12,Error,Hardware Error
  
-
+14. OPENCV 3 in package ur_vision report error 
+in CMakeList.txt of ur_vision, the find...(...OPENCV 3 ...) was changed to find...(... OPENCV ...) 
 
  

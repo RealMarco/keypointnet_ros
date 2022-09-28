@@ -19,7 +19,8 @@ __all__ = [
     "RandomOrder", "RandomCrop", "Crop", "RandomHorizontalFlip", "RandomHorizontalFlipWithPoint",
     "RandomVerticalFlip", "RandomVerticalFlipWithPoint",  "RandomHVFlip", "RandomHVFlipWithPoints",
     "RandomResizedCrop", "RandomSizedCrop", "FiveCrop", "TenCrop", "PaddedSquare","PaddedSquareWithPoints", "RandomPad", "RandomPadWithPoints","RandomPadWithoutPoints"
-     "ColorJitter","ColorJitterWithPoints", "BackgroundReplacement","BackgroundReplacementWithPoints"
+     "ColorJitter","ColorJitterWithPoints", "BackgroundReplacement","BackgroundReplacementWithPoints",
+     "ColorThresholdSegmentation","ColorThresholdSegmentationWithPoints","GrayThresholdSegmentation","GrayThresholdSegmentationWithPoints",
      "RandomRotation", "RandomRotationWithPoint","RandomRotationWithPoints", "RandomAffine",
     "Grayscale", "RandomGrayscale"
 ]
@@ -1192,8 +1193,11 @@ class BackgroundReplacement(object):
     """
     Replace (averaged) background with random color (b,g,r)
     """
-    def __init__(self, default=0):
+    def __init__(self, default=0,r=36,g=146,b=145):
         self.default = default
+        self.b=b
+        self.g=g
+        self.r=r
 
     def __call__(self,img):
         """
@@ -1207,12 +1211,12 @@ class BackgroundReplacement(object):
         b2, g2, r2 = int(b[0,-1]),int(g[0,-1]),int(r[0,-1])
         b3, g3, r3 = int(b[-1,0]),int(g[-1,0]),int(r[-1,0])
         b4, g4, r4 = int(b[-1,-1]),int(g[-1,-1]),int(r[-1,-1])
-        fill = (int((b1+b2+b3+b4)/4), int((g1+g2+g3+g4)/4), int((r1+r2+r3+r4)/4))       
+        fill = (round((b1+b2+b3+b4)/4), round((g1+g2+g3+g4)/4), round((r1+r2+r3+r4)/4))       
 
         if self.default == True:
-            rand_b, rand_g, rand_r =  140, 120, 20  
+            rand_b, rand_g, rand_r = self.b,self.g,self.r 
         else:
-            rand_b, rand_g, rand_r = random.randint(0,255), random.randint(0,255), random.randint(0,255)
+            rand_b, rand_g, rand_r = random.randint(0,255), random.randint(0,255), random.randint(0,255) # random color 
 
         r[r==fill[2]]= rand_r   
         g[g==fill[1]]= rand_g 
@@ -1227,8 +1231,11 @@ class BackgroundReplacementWithPoints(object):
     """
     Replace (averaged) background with random color (b,g,r)
     """
-    def __init__(self, default=0):
+    def __init__(self, default=0, r=36,g=146,b=145):
         self.default = default
+        self.b=b
+        self.g=g
+        self.r=r
 
     def __call__(self,img,x,y, confidence):
         """
@@ -1242,12 +1249,12 @@ class BackgroundReplacementWithPoints(object):
         b2, g2, r2 = int(b[0,-1]),int(g[0,-1]),int(r[0,-1])
         b3, g3, r3 = int(b[-1,0]),int(g[-1,0]),int(r[-1,0])
         b4, g4, r4 = int(b[-1,-1]),int(g[-1,-1]),int(r[-1,-1])
-        fill = (int((b1+b2+b3+b4)/4), int((g1+g2+g3+g4)/4), int((r1+r2+r3+r4)/4))       
+        fill = (round((b1+b2+b3+b4)/4), round((g1+g2+g3+g4)/4), round((r1+r2+r3+r4)/4))       
 
         if self.default == True:
-            rand_b, rand_g, rand_r =  140, 120, 20  
+            rand_b, rand_g, rand_r =  self.b,self.g,self.r
         else:
-            rand_b, rand_g, rand_r = random.randint(0,255), random.randint(0,255), random.randint(0,255)
+            rand_b, rand_g, rand_r = random.randint(0,255), random.randint(0,255), random.randint(0,255) # random color
 
         r[r==fill[2]]= rand_r   
         g[g==fill[1]]= rand_g 
@@ -1257,6 +1264,103 @@ class BackgroundReplacementWithPoints(object):
 
     def __repr__(self):
         return self.__class__.__name__ + '(default={})'.format(self.default)
+
+class ColorThresholdSegmentation(object):
+    """
+    Image Segmentation by color threshold/masking (hsv_low. hsv_high)
+    Args:
+        color_mode specify the median of hsv color threshold, it could be "corner", "constant", "most_frequent"
+        hue_de, sat_de, val_de are deviations for the median of color threshold when run cv2.inRange
+        (hue_de, sat_de, val_de) =(13,107,140), (18,85,140), ()  for ShoePackaging green,white,red background respectively
+    """
+    def __init__(self, color_mode='corner',hue_de=13,sat_de=107,val_de=110):
+        self.color_mode = color_mode
+        self.hue_de = hue_de
+        self.sat_de = sat_de
+        self.val_de = val_de
+
+    def __call__(self,img):
+        """
+        Args: 
+            img (numpy ndarray): Image to be replaced its background.
+        Returns: 
+            numpy ndarray: Orginal object with random background color.
+        """
+        # img= img.transpose(1, 2, 0) # C, H, W → H, W, C
+        # h,w,c =img.shape
+        img_hsv =  cv2.cvtColor(img,cv2.COLOR_RGB2HSV)
+        # Acquire the median of hsv color threshold
+        if self.color_mode == "corner":
+            # Method 1: use hue, saturation, value(brightness) of corner(0,0)
+            # c_hue, c_sat, c_val = int(img_hsv[0,0,0]), int(img_hsv[0,0,1]), int(img_hsv[0,0,2]) 
+            
+            # Method 2: use the average hue, saturation, value(brightness) of 4 corners referring to class BackgroundReplacement()
+            h, s, v = cv2.split(img_hsv)
+            v1, s1, h1 = int(v[0,0]),int(s[0,0]),int(h[0,0])
+            v2, s2, h2 = int(v[0,-1]),int(s[0,-1]),int(h[0,-1])
+            v3, s3, h3 = int(v[-1,0]),int(s[-1,0]),int(h[-1,0])
+            v4, s4, h4 = int(v[-1,-1]),int(s[-1,-1]),int(h[-1,-1])
+            c_hue, c_sat, c_val = round((h1+h2+h3+h4)/4),round((s1+s2+s3+s4)/4),round((v1+v2+v3+v4)/4)
+        #elif self.color_mode == "constant"： # TODO
+        #elif self.color_mode == "most_frequent"： #TODO
+
+        mask =  cv2.inRange(img_hsv, (c_hue-self.hue_de, c_sat-self.sat_de , c_val-self.val_de),(c_hue+self.hue_de, c_sat+self.sat_de , c_val+self.val_de)) # cv2.inRange(img, (int, int, int), ())
+        mask= cv2.medianBlur(mask, 9) # 7
+        mask = cv2.bitwise_not(mask)
+        img = cv2.bitwise_and(img, img, mask=mask)
+        return img
+
+    def __repr__(self):
+        return self.__class__.__name__ + '(color_mode={})'.format(self.color_mode)
+
+class ColorThresholdSegmentationWithPoints(object):
+    """
+    Image Segmentation by color threshold/masking (hsv_low. hsv_high) with points
+    Args:
+        color_mode specify the median of hsv color threshold, it could be "corner", "constant", "most_frequent"
+        hue_de, sat_de, val_de are deviations for the median of color threshold when run cv2.inRange
+        (hue_de, sat_de, val_de) =(13,107,140), (18,85,140), ()  for ShoePackaging green,white,red background respectively
+    """
+    def __init__(self, color_mode='corner',hue_de=13,sat_de=107,val_de=110):
+        self.color_mode = color_mode
+        self.hue_de = hue_de
+        self.sat_de = sat_de
+        self.val_de = val_de
+
+    def __call__(self,img,x,y,confidence):
+        """
+        Args: 
+            img (numpy ndarray): Image to be replaced its background.
+        Returns: 
+            numpy ndarray: Orginal object with random background color.
+        """
+        # img= img.transpose(1, 2, 0) # C, H, W → H, W, C
+        # h,w,c =img.shape
+        img_hsv =  cv2.cvtColor(img,cv2.COLOR_RGB2HSV)
+        # Acquire the median of hsv color threshold
+        if self.color_mode == "corner":
+            # Method 1: use hue, saturation, value(brightness) of corner(0,0)
+            # c_hue, c_sat, c_val = int(img_hsv[0,0,0]), int(img_hsv[0,0,1]), int(img_hsv[0,0,2]) 
+
+            # Method 2: use the average hue, saturation, value(brightness) of 4 corners referring to class BackgroundReplacement()
+            h, s, v = cv2.split(img_hsv)
+            v1, s1, h1 = int(v[0,0]),int(s[0,0]),int(h[0,0])
+            v2, s2, h2 = int(v[0,-1]),int(s[0,-1]),int(h[0,-1])
+            v3, s3, h3 = int(v[-1,0]),int(s[-1,0]),int(h[-1,0])
+            v4, s4, h4 = int(v[-1,-1]),int(s[-1,-1]),int(h[-1,-1])
+            c_hue, c_sat, c_val = round((h1+h2+h3+h4)/4),round((s1+s2+s3+s4)/4),round((v1+v2+v3+v4)/4)
+        #elif self.color_mode == "constant"： # TODO
+        #elif self.color_mode == "most_frequent"： #TODO
+
+        mask =  cv2.inRange(img_hsv, (c_hue-self.hue_de, c_sat-self.sat_de , c_val-self.val_de),(c_hue+self.hue_de, c_sat+self.sat_de , c_val+self.val_de)) # cv2.inRange(img, (int, int, int), ())
+        mask= cv2.medianBlur(mask, 9) # 7
+        mask = cv2.bitwise_not(mask)
+        img = cv2.bitwise_and(img, img, mask=mask)
+
+        return img,x,y
+
+    def __repr__(self):
+        return self.__class__.__name__ + '(color_mode={})'.format(self.color_mode)
 
 class RandomRotation(object):
     """Rotate the image by angle.

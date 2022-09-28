@@ -73,6 +73,41 @@ def cal_ed_val(logit, label):
     
     return ed_l
 
+# cal_ed_val_th computes the average ED nondimensionalized by Toe-Heel distance of a batch when evaluation
+def cal_ed_eval_th(logit, label):
+    ed_loss = []
+    # h= logit.shape[2]
+    # w= logit.shape[3]
+    # print(h,w)
+    for i in range(logit.shape[0]):
+        # calcutate absolute toe-heel distance
+        kx_lt= np.where(label[i][0]==label[i][0].max())[1][0]
+        ky_lt= np.where(label[i][0]==label[i][0].max())[0][0]
+
+        kx_lh= np.where(label[i][1]==label[i][1].max())[1][0]
+        ky_lh= np.where(label[i][1]==label[i][1].max())[0][0]
+
+        th= euclidean_distances([[kx_lt, ky_lt]],[[kx_lh, ky_lh]])
+        for j in range(logit.shape[1]):  # logit.shape[1]==5
+            if label[i][j].max() >= 0.9:
+                kx_l= np.where(label[i][j]==label[i][j].max())[1][0] #+ 0.5 
+                ky_l= np.where(label[i][j]==label[i][j].max())[0][0] #+ 0.5
+
+                kx_p= np.where(logit[i][j]==logit[i][j].max())[1][0] #+ 0.5 # predicted keypoints
+                ky_p= np.where(logit[i][j]==logit[i][j].max())[0][0] #+ 0.5
+                
+                # calculate euclidean_distances by toe-heel nondimensionalized kx, ky
+                ed_tmp = euclidean_distances([[kx_p, ky_p]],[[kx_l, ky_l]]) # 2D arrays are expected 
+                ed_tmp = ed_tmp/th
+                # calculate euclidean_distances by absolute kx, ky
+                # ed_tmp = euclidean_distances([[kx_p, ky_p]],[[kx_l, ky_l]])
+
+                ed_loss.append(ed_tmp)
+    
+    ed_l = sum(ed_loss)/len(ed_loss)
+    
+    return ed_l
+
 # loss = alpha*MSE Loss + (1-alpha) *ED
 def cal_loss(logit, label, alpha = 0.618):  #  0.75 0.618
     """

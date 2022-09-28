@@ -1,4 +1,4 @@
-#!/home/dongyi/anaconda3/envs/paddle_env/bin/python3
+#!/home/dongyi/anaconda3/envs/paddle_env/bin/python
 # -*- coding: utf-8 -*-
 # 
 """
@@ -20,18 +20,26 @@ string kp_class
 #import os
 #import threading
 import sys
-sys.path.append('/home/dongyi/ur_ws/src/keypointnet_ros/keypointnet_ros/scripts')
+sys.path.append('/home/dongyi/ur_ws_vision/src/keypointnet_ros/keypointnet_ros/scripts')
+# sys.path.append('/home/dongyi/anaconda3/envs/paddle_env/lib/python3.9/site-packages')
+print (sys.path)
+sys.path.remove('/usr/lib/python3/dist-packages')
+
+# sys.path.remove('/usr/lib/python3/dist-packages')
+# sys.path.remove('/opt/ros/noetic/lib/python3/dist-packages')
+
+import rospy 
+import numpy as np 
+# import sys
+#path.sys.append('/home/dongyi/anaconda3/envs/paddle_env/lib/python3.9/site-packages')
 from threading import Thread
 
 import cv2
-import numpy as np 
-
-import rospy 
 from cv_bridge import CvBridge, CvBridgeError
 from darknet_ros_msgs.msg import BoundingBoxes, BoundingBox # , ObjectCount
 from std_msgs.msg import String
 from sensor_msgs.msg import Image # ?
-from keypointnet_ros_msgs.msg import Keypoints, Keypoint
+from keypointnet_ros_msgs.msg import Keypoint, Keypoints, KeyObjects
 
 from models.resnet34_classification_paddle import Model_resnet34
 from models.keypointnet_deepest_paddle import KeypointNet_Deepest 
@@ -143,12 +151,12 @@ def keypoint_publisher():
         # create msg
         global ShoeBbxes, KPImage, state_classes, confident_kps, orientations, states, OriImage, CroppedXYmin, CroppedXYmax #ODImage
         KPImage = OriImage #ODImage
+        KeyShoes = KeyObjects()  # Keypoints[] objects
         for i in range(len(confident_kps)): # number of shoeBBxes or CroppeedImgs
             kp_state =  Keypoints() # keypoints with state
             #kp_state.state = shoe_states[states[i]]  # for keypoint-based classification
             kp_state.state = shoe_states[state_classes[i]] # for direct state classification
             kp_state.alpha = orientations[i][0]
-            kp =Keypoint()
             
             c_list = []
             for j in range(confident_kps.shape[1]//3):
@@ -163,6 +171,7 @@ def keypoint_publisher():
             # kp_state.keypoints ...
             for j in range(confident_kps.shape[1]//3):
                 #if confident_kps[i][3*j]>0.5: # confidence threshold
+                kp =Keypoint()
                 if j != minc_j: # output keypoints according to the state
             	    kp.confidence = confident_kps[i][3*j]
     	            # transfer from cropped image coordinate system to original image coordinate system
@@ -173,18 +182,23 @@ def keypoint_publisher():
     	            kp_state.keypoints.append(kp)
     	        
     	            #Visualize keypoints
-    	            KPImage =cv2.circle(KPImage, (kp.x, kp.y), 6, kp_colors[j], -1) # circle(img, point_center, radius, BGR, thickness
+    	            KPImage =cv2.circle(KPImage, (kp.x, kp.y), 10, kp_colors[j], -1) # circle(img, point_center, radius, RGB, thickness
     	            KPImage=cv2.putText(KPImage, kp.kp_class+str(round(kp.confidence,2)), (kp.x+6, kp.y-6), cv2.FONT_HERSHEY_SIMPLEX , 0.5, kp_colors[j], 1, cv2.LINE_AA) # kp.kp_class keypoint_classes[j]
                     
             #Visualize state
-            KPImage=cv2.rectangle(KPImage, (CroppedXYmin[i][0], CroppedXYmin[i][1]), (CroppedXYmax[i][0],CroppedXYmax[i][1]), (0,255,0),1) # (img,(left, top),(right, bottom), color, thickness)
-            KPImage=cv2.putText(KPImage, "shoe D-%s KP-%s"%(shoe_states[state_classes[i]], kp_state.state), (CroppedXYmin[i][0],CroppedXYmin[i][1]-24), cv2.FONT_HERSHEY_SIMPLEX , 0.6, (0,255,0), 2, cv2.LINE_AA)
+            KPImage=cv2.rectangle(KPImage, (CroppedXYmin[i][0], CroppedXYmin[i][1]), (CroppedXYmax[i][0],CroppedXYmax[i][1]), (0,255,0),2) # (img,(left, top),(right, bottom), color, thickness)
+            KPImage=cv2.putText(KPImage, "shoe DL-%s KP-%s"%(shoe_states[state_classes[i]], kp_state.state), (CroppedXYmin[i][0],CroppedXYmin[i][1]-24), cv2.FONT_HERSHEY_SIMPLEX , 0.6, (0,255,0), 2, cv2.LINE_AA)
             #KPImage=cv2.putText(KPImage, "shoe KP-%s"%kp_state.state, (CroppedXYmin[i][0],CroppedXYmin[i][1]-24), cv2.FONT_HERSHEY_SIMPLEX , 0.6, (0,255,0), 2, cv2.LINE_AA) 
-            KPImage=cv2.putText(KPImage, 'alpha = %.2f°'%kp_state.alpha, (CroppedXYmin[i][0],CroppedXYmin[i][1]-8), cv2.FONT_HERSHEY_SIMPLEX , 0.5, (0,255,0), 1, cv2.LINE_AA) # ord('°')=176, chr(176)='°'
+            KPImage=cv2.putText(KPImage, 'yaw = %.2f'%kp_state.alpha, (CroppedXYmin[i][0],CroppedXYmin[i][1]-8), cv2.FONT_HERSHEY_SIMPLEX , 0.5, (0,255,0), 1, cv2.LINE_AA) # ord('°')=176, chr(176)='°'
             # putText(Image, text, bottom-left corner, font, fontScale, color, thickness, lineType, bottomLeftOrigin)
             # publish keypoints with state 
-            kp_state_publisher.publish(kp_state)
-            rospy.loginfo("Publishing shoe keypoints with state %s"%(kp_state.state))
+            
+            KeyShoes.objects.append(kp_state)
+            #kp_state_publisher.publish(kp_state)
+            #rospy.loginfo("Publishing shoe keypoints with state %s"%(kp_state.state))
+        # publish keypoints of shoes
+        kp_state_publisher.publish(KeyShoes)
+        rospy.loginfo("Publishing the keypoints of %d shoes"%(len(KeyShoes.objects)))
         
         # publisher Present the keypoints and shoe class on ODImage, similar to the topic /darknet_ros/detection_image in object detection
         # KPImage =  np.asarray(KPImage)
@@ -202,9 +216,9 @@ def keypoint_publisher():
 
 if __name__ == "__main__":# avoid automatic running below lines when this .py file is imported by others.
 #    try:
-    OriImage = np.zeros((4,4))
+    OriImage = np.zeros((2,2,3))
     # ODImage  = np.zeros((2,2)) 
-    KPImage =  np.ones((2,2))
+    KPImage =  np.ones((2,2,3))
     ShoeBbxes = []
     CroppedImgs = []
     CroppedXYmin = []  # record the [[xmin, ymin],] for coordinate transferring 
@@ -215,7 +229,8 @@ if __name__ == "__main__":# avoid automatic running below lines when this .py fi
     orientations = []
     shoe_states= ['top','side','bottom']
     keypoint_classes =  ['toe','heel','inside','outside','topline']
-    kp_colors = [(136,32,29), (0,0,192), (160,48,112),(171,171,175),(233,44,242)] # BGR
+    # kp_colors = [(136,32,29), (0,0,192), (160,48,112),(171,171,175),(233,44,242)] # RGB
+    kp_colors = [(136,32,29), (0,0,192), (139,69,19),(136,136,136),(233,44,242)] # RGB
     cvbridge = CvBridge()
 #        test_i = Image()
 #        #test_i.
@@ -239,7 +254,7 @@ if __name__ == "__main__":# avoid automatic running below lines when this .py fi
     rospy.init_node("keypointnet_ros", anonymous=True)
     #rospy.init_node('keypointnet_ros')
     # Registration: Create a publisher, and publish a topic named person_info with test_topic.msg.Person message, queue size =4
-    kp_state_publisher= rospy.Publisher('/keypointnet_ros/state_keypoints', Keypoints, queue_size=1) # latch =
+    kp_state_publisher= rospy.Publisher('/keypointnet_ros/state_keypoints', KeyObjects, queue_size=1) # latch =
     kp_img_publisher  = rospy.Publisher('/keypointnet_ros/keypoint_image', Image, queue_size=1)
     rospy.sleep(0.2) # wait for finishing node registration, or the 1st msg wouldn't be published
     
