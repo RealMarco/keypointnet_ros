@@ -1,6 +1,14 @@
-# KeypointNet: Keypoints Detection, States Classfication, Pose Calculation    
-- keypointnet_ros consists of core code for Keypoints Detection, States Classfication and their corresponding ros packages.  
-- keypointnet_ros_msgs is messages used for keypoint_ros  
+# KeypointNet: Keypoints Detection, Keypoing-based Pose Classfication and Orientation Estimation
+- keypointnet_ros consists of core code of Keypoints Detection, Keypoing-based Pose Classfication (a.k.a. States CLassification) and Orientation Estimation for training and ROS deployment. 
+- keypointnet_ros_msgs is messages used for keypoint_ros
+
+## Overview  
+## Citing  
+## Installation  
+### Dependencies  
+### Building (Compiling)  
+
+
 
 ## Files Description  
 1. [/keypointnet_ros/scripts/](keypointnet_ros/scripts/) includes python scripts   
@@ -15,34 +23,39 @@
     6. [/utils/KPDataset.py](keypointnet_ros/scripts/utils/KPDataset.py) and [/utils/PCDataset.py](keypointnet_ros/scripts/utils/PCDataset.py) read and augment date, then generate dataset classes to make them understandable for PaddlePaddle.  
     7. [/models/](keypointnet_ros/scripts/models/) and /trained_models/ provide network (model) architecture and pre-trained weights respectively.  
     8. [transforms.py](keypointnet_ros/scripts/transforms.py) with [functional.py](keypointnet_ros/scripts/functional.py) contains many useful image data augmentation (transformation) methods, which were not only designed for this task, but also suitable for other image-based Machine Learning tasks (i.e., classification, segmentation, regression and keypoint detection). They are not framework-limited, and it means that any python-based framework like PyTorch, PaddlePaddle can use them.  
-	9. [2DShoesKeypointDetection_clear_version.ipynb] (keypointnet_ros/scripts/2DShoesKeypointDetection_clear_version.ipynb) is the jupyter notebook version of our code.
-
+    9. [2DShoesKeypointDetection_clear_version.ipynb](keypointnet_ros/scripts/2DShoesKeypointDetection_clear_version.ipynb) is the jupyter notebook version of our code.
 2. [/keypointnet_ros/src/](keypointnet_ros/scripts/keypointnet_ros/src/) includes cpp code
 
 ## To Be Uptated
-1. Pose Estimation
-2. Keypoint-based states classification
-3. Threshold or state based keypoint filter.
+1. Keypoint-based states classification
+2. Keypoint-based Pose Estimation
 
 ## To Do
-4. Deploy YOLOv4-p5 on darknet_ros. Changes are required in the darknet_ros besides replacing darknet(v3) by darknetv4
-    1. Change cofig/yolov3-tiny-spb.yaml file 
-    2. Change cfg and .weights in yolo_network _config 
-    3. launch/yolo_v3.lauch  
-    4. Is it essential to adjust the files in darknet_ros/src? 
-    5. Is it essential to adjust the /launch/darknet_ros.lauch? 
-    6. recompile 
-5. What about using KeypointNet to train and infer the states.
-    1. Problem 1 is that the penultimate layer is 256×256×3 (512×512×3), which is so huge. 
-    2. Problem 2 is how to concatenate the heatmap output and regression output layers in one network.
-6. Training classification by using a separate KeypointNet
-7. Initial the input by Gaussian mixture models, try to predict keypoints by one heatmap in multiple-shoe scenario with other kinds of object. (YOLO5-Keypoints)
-    0. Refer to YOLO-segmentation 
-    1. Problem 1 is to improve the keypoint-based states classification. Maybe directly use YOLO to classify the states.
-8. Other easy-to-use block
-9. Transformer, non-local network.
-10. YOLOR
-11. Train resnet34 classification model without @paddle.jit.to_static to acuquire a model with smaller size
-Keypoint detection in public dataset
-Table. 2. To compare shoe keypoint detection algorithms (efficiency, the size of the dataset)? 
+11. Train resnet34 classification model without @paddle.jit.to_static to acuquire a model with smaller size    
+12. Table. 2. To compare shoe keypoint detection algorithms (precision, sample efficiency (the size of the dataset), inference speed)?   
 
+## Start to run the keypointnet_ros
+    $ catkin_make 
+    #$ catkin_make -DPYTHON_EXECUTABLE=/home/dongyi/anaconda3/envs/paddle_env/bin/python 
+    #$ catkin_make -DPYTHON_EXECUTABLE=/usr/bin/python3 
+    
+    $ source devel/setup.bash  
+    
+    #$ roslaunch realsense2_camera rs_camera.launch 
+    $ roslaunch realsense2_camera rs_camera.launch align_depth:=true 
+    
+    $ roslaunch darknet_ros yolov4-p5RP.launch   
+    
+    # $ roscore # $ roslauch calls ros master automatically, thus no need to roscore again.   
+    $ rosrun keypointnet_ros KeypointDetector.py  
+
+## Call keypoint_ros in robot system (To Be Validated and Improved)     
+    $ roslaunch realsense2_camera rs_camera.launch align_depth:=true  
+    
+    # run the calibration software  
+    $ roslaunch easy_handeye eye_to_hand_calibration.launch  
+    
+    $ roslaunch darknet_ros yolov4-p5RP.launch
+    $ rosrun keypointnet_ros KeypointDetector.py
+    $ rosrun ur_smach visionInterface.py
+    ...  
