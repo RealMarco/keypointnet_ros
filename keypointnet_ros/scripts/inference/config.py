@@ -9,7 +9,8 @@ best_PCmodel_path  = "/home/dongyi/ur_ws_vision/src/keypointnet_ros/keypointnet_
 #best_PCmodel_path2 = ''  # set '' or None if only use a single model for classification
 best_PCmodel_path2 = "/home/dongyi/ur_ws_vision/src/keypointnet_ros/keypointnet_ros/scripts/trained_models/ShoePoseClassificationResNet/PC_ResNet34_0.9801.pdparams" # 0.5*0.9812 + 0.5*0.9801, 2 models for model ensemble
 #best_KPmodel_path = "trained_models/8_3Heatmap_GResNet-Deepest_C32_no_TestSet_finetune_220315_1219/best_model_0.016625/model.pdparams" # keypoint model path
-best_KPmodel_path = "/home/dongyi/ur_ws_vision/src/keypointnet_ros/keypointnet_ros/scripts/trained_models/2DShoeKeypointDetection/2DKeypointNet_0.016625.pdparams"
+#best_KPmodel_path = "/home/dongyi/ur_ws_vision/src/keypointnet_ros/keypointnet_ros/scripts/trained_models/2DShoeKeypointDetection/2DKeypointNet_0.016625.pdparams"
+best_KPmodel_path = "/home/dongyi/ur_ws_vision/src/keypointnet_ros/keypointnet_ros/scripts/trained_models/2DShoeKeypointDetection/2DKeypointNet_0.011527.pdparams"
 #best_KPmodel_path = "/home/dongyi/ur_ws/src/keypointnet_ros/keypointnet_ros/scripts/trained_models/2DShoeKeypointDetection/2DKeypointNet_0.011527.pdparams"
 ### input imgs
 #testset_root2 = "TestingSetSmall"
