@@ -33,14 +33,45 @@ The KeypointNet-ROS package has been tested under ROS Noetic and Ubuntu 20.04. T
     $ python keypoints_train.py or $ ./keypoints_train.py
 
 ## Testing
+##### 1. Use the jupyter notebook [2DShoesKeypointDetection_clear_version.ipynb](keypointnet_ros/scripts/2DShoesKeypointDetection_clear_version.ipynb) for testing.
+##### 2. Run [keypoints_test.py](keypointnet_ros/scripts/keypoints_test.py) in linux shell or python interpreter like [Training](README.md#Training). 
 
 ## Deployment on ROS (-based Robot System)
+[KeypointDetector.py](keypointnet_ros/scripts/KeypointDetector.py) works in ROS environment and achieves fucntions below by multi-threads  
 
-### Nodes
-### Topics
-#### Messages
-#### Publishers
-#### Subscribers
+### Node Initialization: keypointnet_ros  
+Our main node.  
+
+### Subscribing Topics  
+Subscribing msgs in topic '/camera/color/image_raw', '/darknet_ros/bounding_boxes', '/darknet_ros/detection_image' 
+
+### Inference
+Inferring the keypoints, states, orientations of raw camera images by call functions in [keypoints_pred.py](keypointnet_ros/scripts/inference/keypoints_pred.py)      
+
+### Publishing Topics  
+Publishing msgs in topic '/keypointnet_ros/state_keypoints', '/keypointnet_ros/keypoint_image'   
+
+### Messages 
+    from cv_bridge import CvBridge, CvBridgeError  
+    from darknet_ros_msgs.msg import BoundingBoxes, BoundingBox # , ObjectCount  
+    from std_msgs.msg import String  
+    from sensor_msgs.msg import Image  
+    from keypointnet_ros_msgs.msg import Keypoint, Keypoints, KeyObjects  
+where **Keypoint** is defined by [Keypoint.msg](keypointnet_ros_msgs/msg/Keypoint.msg) as    
+
+    float64 confidence  
+    int64 x  
+    int64 y  
+    string kp_class  
+    
+,**Keypoints** is defined by [Keypoints.msg](keypointnet_ros_msgs/msg/Keypoints.msg) as  
+
+    Keypoint[] keypoints  
+    string state  
+    float64 alpha  
+,**KeyObjects** is defined by [KeyObjects.msg](keypointnet_ros_msgs/msg/KeyObjects.msg) as   
+
+    Keypoints[] objects
 
 ### Start to run the keypointnet_ros
     $ conda activate keypointnet (your_env_name) or $ source activate keypointnet (your_env_name)   
@@ -75,7 +106,7 @@ The KeypointNet-ROS package has been tested under ROS Noetic and Ubuntu 20.04. T
     1. [/inference/config.py](keypointnet_ros/scripts/inference/config.py) is the configuration file of training and deployment our keypoint detection, which should be input and adjusted by users.  
     2. [KeypointDetector.py](keypointnet_ros/scripts/KeypointDetector.py) works in ROS environment and achieves fucntions below by multi-threads  
         - Subscribing msgs in topic '/camera/color/image_raw', '/darknet_ros/bounding_boxes', '/darknet_ros/detection_image'  
-        - Inferring the keypoints, states, (poses) of raw camera images by call functions in keypoints_pred.py  
+        - Inferring the keypoints, states, orientations of raw camera images by call functions in keypoints_pred.py  
         - Publishing msgs in topic '/keypointnet_ros/state_keypoints', '/keypointnet_ros/keypoint_image' 
     3. [keypoints_test.py](keypointnet_ros/scripts/keypoints_test.py) works in python environment and tests the keypoint detection performance by a small batch of images.
     4. [keypoints_train.py](keypointnet_ros/scripts/keypoints_train.py) works in python environment and trains the keypoint detection model according to config.py.
@@ -84,7 +115,8 @@ The KeypointNet-ROS package has been tested under ROS Noetic and Ubuntu 20.04. T
     7. [/models/](keypointnet_ros/scripts/models/) and /trained_models/ provide network (model) architecture and pre-trained weights respectively.  
     8. [transforms.py](keypointnet_ros/scripts/transforms.py) with [functional.py](keypointnet_ros/scripts/functional.py) contains many useful image data augmentation (transformation) methods, which were not only designed for this task, but also suitable for other image-based Machine Learning tasks (i.e., classification, segmentation, regression and keypoint detection). They are not framework-limited, and it means that any python-based framework like PyTorch, PaddlePaddle can use them.  
     9. [2DShoesKeypointDetection_clear_version.ipynb](keypointnet_ros/scripts/2DShoesKeypointDetection_clear_version.ipynb) is the jupyter notebook version of our code.
-2. [/keypointnet_ros/src/](keypointnet_ros/scripts/keypointnet_ros/src/) includes cpp code
+2. [/keypointnet_ros_msgs/](keypointnet_ros_msgs/) involves ROS Messages - related code  
+3. [/keypointnet_ros/src/](keypointnet_ros/scripts/keypointnet_ros/src/) consists of cpp code  
 
 ## To Be Uptated
 1. Keypoint-based states classification
