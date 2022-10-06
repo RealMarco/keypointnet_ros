@@ -44,7 +44,7 @@ The KeypointNet-ROS package has been tested under ROS Noetic and Ubuntu 20.04. T
 ##### 3. Output Keypoint Detection Results 
 
 ## Post Processing: Keypoint-based State Classification and Orientation Estimation
-Check [evaluation/](keypointnet_ros/scripts/evaluation/) and ... for details.
+Check [2DShoesKeypointDetection_clear_version.ipynb](keypointnet_ros/scripts/2DShoesKeypointDetection_clear_version.ipynb) and [evaluation/](keypointnet_ros/scripts/evaluation/) for details.
 
 ## Deployment on ROS (-based Robot System)
 [KeypointDetector.py](keypointnet_ros/scripts/KeypointDetector.py) works in ROS environment and achieves fucntions below by multi-threads  
@@ -55,7 +55,7 @@ Our main node.
 ### Subscribing Topics  
 Subscribing msgs in topic '/camera/color/image_raw', '/darknet_ros/bounding_boxes', '/darknet_ros/detection_image' 
 
-### Inference
+### Inference: Keypoints Detection, Keypoing-based Pose Classfication and Orientation Estimation 
 Inferring the **keypoints, states, orientations** of raw camera images by call functions in [keypoints_pred.py](keypointnet_ros/scripts/inference/keypoints_pred.py)      
 
 ### Publishing Topics  
