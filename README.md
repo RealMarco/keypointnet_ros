@@ -1,15 +1,61 @@
 # KeypointNet: Keypoints Detection, Keypoing-based Pose Classfication and Orientation Estimation
+KeypointNet is a keypoint detection deep learning model for 
 - keypointnet_ros consists of core code of Keypoints Detection, Keypoing-based Pose Classfication (a.k.a. States CLassification) and Orientation Estimation for training and ROS deployment. 
 - keypointnet_ros_msgs is messages used for keypoint_ros
 
 ## Overview  
 ## Citing  
-## Installation  
-### Dependencies  
-### Building (Compiling)  
+## Installation, and Building (Compiling)
+##### 1. Establish your keypointnet python environment *keypointnet*, and virtual environment by conda is highly-recommended.  
+##### 2. Install the essential python packages and libraries according to [requirements.txt](keypointnet_ros/requirements.txt) in your keypointnet env.   
+##### 3. Create ROS packages and compile  
+    $ cd ~/catkin_workspace/src   
+    $ catkin_create_pkg keypointnet_ros_msgs actionlib_msgs geometry_msgs sensor_msgs message_runtime std_msgs   
+    $ catkin_create_pkg keypointnet_ros rospy roscpp std_msgs cv_bridge sensor_msgs darknet_ros_msgs keypointnet_ros_msgs image_transport message_generation message_runtime nodelet actionlib  
+    $ conda activate keypointnet (your_env_name) or $ source activate keypointnet (your_env_name)    
+    $ catkin_make  
+    Or $ catkin_make -DPYTHON_EXECUTABLE=/home/dongyi/anaconda3/envs/paddle_env/bin/python 
 
+## Training
 
+## Testing
 
+## Deployment on ROS (-based Robot System)
+
+### Nodes
+### Topics
+#### Messages
+#### Publishers
+#### Subscribers
+
+### Start to run the keypointnet_ros
+    $ conda activate keypointnet (your_env_name) or $ source activate keypointnet (your_env_name)   
+    $ catkin_make  
+    #$ catkin_make -DPYTHON_EXECUTABLE=/home/dongyi/anaconda3/envs/paddle_env/bin/python 
+    #$ catkin_make -DPYTHON_EXECUTABLE=/usr/bin/python3 
+    
+    $ source devel/setup.bash  
+    
+    #$ roslaunch realsense2_camera rs_camera.launch 
+    $ roslaunch realsense2_camera rs_camera.launch align_depth:=true 
+    
+    $ roslaunch darknet_ros yolov4-p5RP.launch   
+    Or $ roslaunch darknet_ros yolo_v3_tiny_spb.launch  
+    
+    # $ roscore # $ roslauch calls ros master automatically, thus no need to roscore again.   
+    $ rosrun keypointnet_ros KeypointDetector.py  
+
+### Call keypoint_ros in robot system (To Be Validated and Improved)     
+    $ roslaunch realsense2_camera rs_camera.launch align_depth:=true  
+    
+    # run the calibration software  
+    $ roslaunch easy_handeye eye_to_hand_calibration.launch  
+    
+    $ roslaunch darknet_ros yolov4-p5RP.launch
+    $ rosrun keypointnet_ros KeypointDetector.py
+    $ rosrun ur_smach visionInterface.py
+    ...  
+    
 ## Files Description  
 1. [/keypointnet_ros/scripts/](keypointnet_ros/scripts/) includes python scripts   
     1. [KeypointDetector.py](keypointnet_ros/scripts/KeypointDetector.py) works in ROS environment and achieves fucntions below by multi-threads  
@@ -34,28 +80,3 @@
 11. Train resnet34 classification model without @paddle.jit.to_static to acuquire a model with smaller size    
 12. Table. 2. To compare shoe keypoint detection algorithms (precision, sample efficiency (the size of the dataset), inference speed)?   
 
-## Start to run the keypointnet_ros
-    $ catkin_make 
-    #$ catkin_make -DPYTHON_EXECUTABLE=/home/dongyi/anaconda3/envs/paddle_env/bin/python 
-    #$ catkin_make -DPYTHON_EXECUTABLE=/usr/bin/python3 
-    
-    $ source devel/setup.bash  
-    
-    #$ roslaunch realsense2_camera rs_camera.launch 
-    $ roslaunch realsense2_camera rs_camera.launch align_depth:=true 
-    
-    $ roslaunch darknet_ros yolov4-p5RP.launch   
-    
-    # $ roscore # $ roslauch calls ros master automatically, thus no need to roscore again.   
-    $ rosrun keypointnet_ros KeypointDetector.py  
-
-## Call keypoint_ros in robot system (To Be Validated and Improved)     
-    $ roslaunch realsense2_camera rs_camera.launch align_depth:=true  
-    
-    # run the calibration software  
-    $ roslaunch easy_handeye eye_to_hand_calibration.launch  
-    
-    $ roslaunch darknet_ros yolov4-p5RP.launch
-    $ rosrun keypointnet_ros KeypointDetector.py
-    $ rosrun ur_smach visionInterface.py
-    ...  
