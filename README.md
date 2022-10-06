@@ -1,5 +1,8 @@
 # KeypointNet: Keypoints Detection, Keypoing-based Pose Classfication and Orientation Estimation
-KeypointNet is a keypoint detection deep learning model for 
+KeypointNet is a keypoint detection deep learning model for category-level semantic keypoint detection with keypoint-based state classification and pose estimation. We  developed this easy-to-use keypointnet_ros package by integrating the training, testing, and deployment code, such that it can be applied in other ROS-based software system.  
+
+The KeypointNet-ROS package has been tested under ROS Noetic and Ubuntu 20.04. This is research code, expect that it changes often and users make adapt some details for specific system and task.    
+
 - keypointnet_ros consists of core code of Keypoints Detection, Keypoing-based Pose Classfication (a.k.a. States CLassification) and Orientation Estimation for training and ROS deployment. 
 - keypointnet_ros_msgs is messages used for keypoint_ros
 
@@ -16,7 +19,18 @@ KeypointNet is a keypoint detection deep learning model for
     $ catkin_make  
     Or $ catkin_make -DPYTHON_EXECUTABLE=/home/dongyi/anaconda3/envs/paddle_env/bin/python 
 
+## Before your Start
+1. Modify the parameters in keypointnet_ros/keypointnet_ros/scripts/inference/config.py in accordance with your configurations, including batchsize, learning rate, best model path, root of trainset, etc.  
+2. Adjust the Shebang line (the first line in .py file, e.g. #!/usr/bin/python3) in KeypointDetector.py, keypoints_train.py, keypoints_test.py to your location of (virtual) python core.  
+3. Adjust your data preprocessing and augmentation method by *... = trans.ComposeWithPoint...*  and *... = trans.Compose...* lines in [keypoints_train.py](keypointnet_ros/scripts/keypoints_train.py), [keypoints_pred.py](keypointnet_ros/scripts/inference/keypoints_pred.py) and [keypoints_test.py](keypointnet_ros/scripts/keypoints_test.py) according to [transforms.py](keypointnet_ros/scripts/transforms.py) and your data.  
+
 ## Training
+##### 1. A jupyter notebook [2DShoesKeypointDetection_clear_version.ipynb](keypointnet_ros/scripts/2DShoesKeypointDetection_clear_version.ipynb) is provided for training and testing. Users can easily understand and train the model by following the instructions and code comments in it.  
+##### 2. Run [keypoints_train.py](keypointnet_ros/scripts/keypoints_train.py) in linux shell or python interpreter 
+    
+    $ conda activate keypointnet (your_env_name) or $ source activate keypointnet (your_env_name)  
+    $ cd keypointnet_ros/keypointnet_ros/scripts
+    $ python keypoints_train.py or $ ./keypoints_train.py
 
 ## Testing
 
@@ -58,15 +72,15 @@ KeypointNet is a keypoint detection deep learning model for
     
 ## Files Description  
 1. [/keypointnet_ros/scripts/](keypointnet_ros/scripts/) includes python scripts   
-    1. [KeypointDetector.py](keypointnet_ros/scripts/KeypointDetector.py) works in ROS environment and achieves fucntions below by multi-threads  
+    1. [/inference/config.py](keypointnet_ros/scripts/inference/config.py) is the configuration file of training and deployment our keypoint detection, which should be input and adjusted by users.  
+    2. [KeypointDetector.py](keypointnet_ros/scripts/KeypointDetector.py) works in ROS environment and achieves fucntions below by multi-threads  
         - Subscribing msgs in topic '/camera/color/image_raw', '/darknet_ros/bounding_boxes', '/darknet_ros/detection_image'  
         - Inferring the keypoints, states, (poses) of raw camera images by call functions in keypoints_pred.py  
         - Publishing msgs in topic '/keypointnet_ros/state_keypoints', '/keypointnet_ros/keypoint_image' 
-    2. [keypoints_test.py](keypointnet_ros/scripts/keypoints_test.py) works in python environment and tests the keypoint detection performance by a small batch of images.
-    3. [keypoints_train.py](keypointnet_ros/scripts/keypoints_train.py) works in python environment and trains the keypoint detection model according to config.py.
-    4. [keypoints_pred.py](keypointnet_ros/scripts/inference/keypoints_pred.py) can accomplish the inference of keypoints and states in deployment and testing segment. It works for KeypointDetector.py anf keypoints_test.py. 
-    5. [/inference/config.py](keypointnet_ros/scripts/inference/config.py) is the configuration file of training and deployment our keypoint detection, which should be input and adjusted by users.  
-    6. [/utils/KPDataset.py](keypointnet_ros/scripts/utils/KPDataset.py) and [/utils/PCDataset.py](keypointnet_ros/scripts/utils/PCDataset.py) read and augment date, then generate dataset classes to make them understandable for PaddlePaddle.  
+    3. [keypoints_test.py](keypointnet_ros/scripts/keypoints_test.py) works in python environment and tests the keypoint detection performance by a small batch of images.
+    4. [keypoints_train.py](keypointnet_ros/scripts/keypoints_train.py) works in python environment and trains the keypoint detection model according to config.py.
+    5. [keypoints_pred.py](keypointnet_ros/scripts/inference/keypoints_pred.py) can accomplish the inference of keypoints and states in deployment and testing segment. It works for KeypointDetector.py anf keypoints_test.py.  
+    6. . [/utils/KPDataset.py](keypointnet_ros/scripts/utils/KPDataset.py) and [/utils/PCDataset.py](keypointnet_ros/scripts/utils/PCDataset.py) read and augment date, then generate dataset classes to make them understandable for PaddlePaddle.  
     7. [/models/](keypointnet_ros/scripts/models/) and /trained_models/ provide network (model) architecture and pre-trained weights respectively.  
     8. [transforms.py](keypointnet_ros/scripts/transforms.py) with [functional.py](keypointnet_ros/scripts/functional.py) contains many useful image data augmentation (transformation) methods, which were not only designed for this task, but also suitable for other image-based Machine Learning tasks (i.e., classification, segmentation, regression and keypoint detection). They are not framework-limited, and it means that any python-based framework like PyTorch, PaddlePaddle can use them.  
     9. [2DShoesKeypointDetection_clear_version.ipynb](keypointnet_ros/scripts/2DShoesKeypointDetection_clear_version.ipynb) is the jupyter notebook version of our code.
