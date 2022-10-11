@@ -549,6 +549,7 @@ def rotate(img, angle, resample=False, expand=False, center=None):
     else:
         return cv2.warpAffine(img, M, (cols, rows))
 
+# x,y rotate clockwise by centerx,centery
 def Crotate(angle,x,y,centerx,centery): # rotate point (x,y) clockwise, angle should be in radians
     x = np.array(x)
     y = np.array(y)
@@ -556,7 +557,7 @@ def Crotate(angle,x,y,centerx,centery): # rotate point (x,y) clockwise, angle sh
     CRotatey = (x-centerx)*math.sin(angle) + (y-centery)*math.cos(angle) + centery
     return CRotatex, CRotatey
 
-# x,y rotate clockwise by centerx,centery
+# x,y rotate anti-clockwise by centerx,centery
 def ACrotate(angle,x,y,centerx,centery): # rotate anti-clockwise, angle should be in radians
     x = np.array(x)             # 
     y = np.array(y)
