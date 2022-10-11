@@ -522,7 +522,7 @@ def adjust_gamma(img, gamma, gain=1):
 
 
 def rotate(img, angle, resample=False, expand=False, center=None):
-    """Rotate the image by angle.
+    """Rotate the image by angle, and positive value means anti-clockwise rotation 
     Args:
         img (numpy ndarray): numpy ndarray to be rotated.
         angle (float or int): In degrees degrees counter clockwise order.
@@ -543,7 +543,7 @@ def rotate(img, angle, resample=False, expand=False, center=None):
     rows, cols = img.shape[0:2]
     if center is None:
         center = (cols / 2, rows / 2)
-    M = cv2.getRotationMatrix2D(center, angle, 1)   # Positive value means counter-clockwise rotation 
+    M = cv2.getRotationMatrix2D(center, angle, 1)   # Positive value means anti-clockwise rotation 
     if img.shape[2] == 1:
         return cv2.warpAffine(img, M, (cols, rows))[:, :, np.newaxis]
     else:
@@ -565,7 +565,7 @@ def Crotate(angle,x,y,centerx,centery): # rotate clockwise, angle should be in r
     return CRotatex,CRotatey
 
 def rotate_with_point(img, angle, x, y, resample=False, expand=False, center=None, centerx=0.5, centery=0.5):
-    """Rotate the image with a single point by angle.
+    """Rotate the image with a single point by angle, and positive value means anti-clockwise rotation
     Args:
         img (numpy ndarray): numpy ndarray to be rotated.
         angle (float or int): In degrees degrees counter clockwise order.
@@ -596,7 +596,7 @@ def rotate_with_point(img, angle, x, y, resample=False, expand=False, center=Non
         return cv2.warpAffine(img, M, (cols, rows)), ACRotatex, ACRotatey
 
 def rotate_with_points(img, angle, x, y, confidence, resample=False, expand=False, center=None, centerx=0.5, centery=0.5):
-    """Rotate the image with a single point by angle.
+    """Rotate the image with a single point by angle, and positive value means anti-clockwise rotation
     Args:
         img (numpy ndarray): numpy ndarray to be rotated.
         angle (float or int): In degrees degrees counter clockwise order.
