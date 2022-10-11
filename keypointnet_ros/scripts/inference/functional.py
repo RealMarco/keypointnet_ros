@@ -549,20 +549,20 @@ def rotate(img, angle, resample=False, expand=False, center=None):
     else:
         return cv2.warpAffine(img, M, (cols, rows))
 
-def ACrotate(angle,x,y,centerx,centery): # rotate point (x,y) anticlockwise, angle should be in radians
+def Crotate(angle,x,y,centerx,centery): # rotate point (x,y) clockwise, angle should be in radians
     x = np.array(x)
     y = np.array(y)
-    ACRotatex = (x-centerx)*math.cos(angle) - (y-centery)*math.sin(angle) + centerx
-    ACRotatey = (x-centerx)*math.sin(angle) + (y-centery)*math.cos(angle) + centery
-    return ACRotatex, ACRotatey
+    CRotatex = (x-centerx)*math.cos(angle) - (y-centery)*math.sin(angle) + centerx
+    CRotatey = (x-centerx)*math.sin(angle) + (y-centery)*math.cos(angle) + centery
+    return CRotatex, CRotatey
 
 # x,y rotate clockwise by centerx,centery
-def Crotate(angle,x,y,centerx,centery): # rotate clockwise, angle should be in radians
+def ACrotate(angle,x,y,centerx,centery): # rotate anti-clockwise, angle should be in radians
     x = np.array(x)             # 
     y = np.array(y)
-    CRotatex = (x-centerx)*math.cos(angle) + (y-centery)*math.sin(angle) + centerx
-    CRotatey = (y-centery)*math.cos(angle) - (x-centerx)*math.sin(angle) + centery
-    return CRotatex,CRotatey
+    ACRotatex = (x-centerx)*math.cos(angle) + (y-centery)*math.sin(angle) + centerx
+    ACRotatey = (y-centery)*math.cos(angle) - (x-centerx)*math.sin(angle) + centery
+    return ACRotatex,ACRotatey
 
 def rotate_with_point(img, angle, x, y, resample=False, expand=False, center=None, centerx=0.5, centery=0.5):
     """Rotate the image with a single point by angle, and positive value means anti-clockwise rotation
@@ -588,7 +588,7 @@ def rotate_with_point(img, angle, x, y, resample=False, expand=False, center=Non
         center = (cols / 2, rows / 2)
     # angle=30  # Added to test
     M = cv2.getRotationMatrix2D(center, angle, 1)   # Positive value means counter-clockwise rotation, in angle system
-    ACRotatex, ACRotatey = Crotate(math.radians(angle),x,y,centerx,centery) # rotate the point (x,y) anticlockwise，angle should be in radians
+    ACRotatex, ACRotatey = ACrotate(math.radians(angle),x,y,centerx,centery) # rotate the point (x,y) anticlockwise，angle should be in radians
                                                                             # clockwise in image coordinate system equals anticlockwise in general coordinate system
     if img.shape[2] == 1:
         return cv2.warpAffine(img, M, (cols, rows))[:, :, np.newaxis], ACRotatex, ACRotatey
@@ -621,7 +621,7 @@ def rotate_with_points(img, angle, x, y, confidence, resample=False, expand=Fals
     M = cv2.getRotationMatrix2D(center, angle, 1)   # Positive value means counter-clockwise rotation, in angle system
     for i in range(len(x)):
         if confidence[i] >= 0.5:
-            x[i], y[i] = Crotate(math.radians(angle),x[i],y[i],centerx,centery) # rotate the point (x,y) anticlockwise，angle should be in radians
+            x[i], y[i] = ACrotate(math.radians(angle),x[i],y[i],centerx,centery) # rotate the point (x,y) anticlockwise，angle should be in radians
             # clockwise in image coordinate system equals anticlockwise in general coordinate system
             '''
             # limit (x,y) in range (0,1)
