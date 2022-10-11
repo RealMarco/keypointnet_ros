@@ -1363,7 +1363,7 @@ class ColorThresholdSegmentationWithPoints(object):
         return self.__class__.__name__ + '(color_mode={})'.format(self.color_mode)
 
 class RandomRotation(object):
-    """Rotate the image by angle.
+    """Rotate the image by angle, and positive value means anti-clockwise rotation
     Args:
         degrees (sequence or float or int): Range of degrees to select from.
             If degrees is a number instead of sequence like (min, max), the range of degrees
@@ -1428,7 +1428,7 @@ class RandomRotation(object):
 
 
 class RandomRotationWithPoint(object):
-    """Rotate the image with a single point by angle.
+    """Rotate the image with a single point by angle, and positive value means anti-clockwise rotation
     Args:
         degrees (sequence or float or int): Range of degrees to select from.
             If degrees is a number instead of sequence like (min, max), the range of degrees
@@ -1493,7 +1493,7 @@ class RandomRotationWithPoint(object):
         return format_string
 
 class RandomRotationWithPoints(object):
-    """Rotate the image with multiple points by angle.
+    """Rotate the image with multiple points by angle, and positive value means anti-clockwise rotation
     Args:
         degrees (sequence or float or int): Range of degrees to select from.
             If degrees is a number instead of sequence like (min, max), the range of degrees
