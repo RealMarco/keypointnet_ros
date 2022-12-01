@@ -3,7 +3,7 @@ KeypointNet is a keypoint detection deep learning model for category-level seman
 
 The KeypointNet-ROS package has been tested under ROS Noetic and Ubuntu 20.04. This is research code, expect that it changes often and users make adapt some details for specific system and task.    
 
-- keypointnet_ros consists of core code of Keypoints Detection, Keypoing-based Pose Classfication (a.k.a. States CLassification) and Orientation Estimation for training and ROS deployment. 
+- keypointnet_ros consists of core code of Keypoints Detection, Keypoing-based Pose Classfication (a.k.a. States Classification) and Orientation Estimation for training and ROS deployment. 
 - keypointnet_ros_msgs is messages used for keypoint_ros
 
 ## Overview  
@@ -56,7 +56,8 @@ Our main node.
 Subscribing msgs in topic '/camera/color/image_raw', '/darknet_ros/bounding_boxes', '/darknet_ros/detection_image' 
 
 ### Inference: Keypoints Detection, Keypoing-based Pose Classfication and Orientation Estimation 
-Inferring the **keypoints, states, orientations** of raw camera images by call functions in [keypoints_pred.py](keypointnet_ros/scripts/inference/keypoints_pred.py)      
+Inferring the **keypoints, states, orientations** of raw camera images by call functions in [keypoints_pred.py](keypointnet_ros/scripts/inference/keypoints_pred.py)     
+Set the value of state_mode and orient_mode for the KPinfer function to infer the states and orientations according to your requirements.  
 
 ### Publishing Topics  
 Publishing msgs in topic '/keypointnet_ros/state_keypoints', '/keypointnet_ros/keypoint_image'   
