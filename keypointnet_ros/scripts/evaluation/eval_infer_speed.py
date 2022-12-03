@@ -95,6 +95,7 @@ if __name__ == '__main__': # avoid automatic running below lines when this .py f
     confident_kps, orientations, states= KPinfer(KPmodel,test_filelists2, batchsize, state_mode = True, orient_mode =True)  #the size of confident_kps is CroppeedImg num x 15
     #confident_kps, states= KPinfer(KPmodel,test_filelists2, batchsize, state_mode = True, orient_mode =False)
     # confident_kps, orientations= KPinfer(KPmodel,test_filelists2, batchsize, state_mode = False, orient_mode =True)
+    # confident_kps = KPinfer(KPmodel,test_filelists2, batchsize, state_mode = False, orient_mode =False) 
     # end2 = time.clock()
     end2 = time.time()
     print("Average inference time for keypoint detection+post-proscessing: %f"%((end2 -start2)/len(test_filelists2)))
