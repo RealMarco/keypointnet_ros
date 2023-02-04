@@ -16,8 +16,8 @@ import inference.functional as F
 __all__ = [
     "Compose", "ComposeWithPoint", "Resize", "Scale",
     "CenterCrop", "CropCenterSquare", "Pad", "Lambda", "RandomApply", "RandomChoice",
-    "RandomOrder", "RandomCrop", "Crop", "RandomHorizontalFlip", "RandomHorizontalFlipWithPoint",
-    "RandomVerticalFlip", "RandomVerticalFlipWithPoint",  "RandomHVFlip", "RandomHVFlipWithPoints",
+    "RandomOrder", "RandomCrop", "Crop", "RandomHorizontalFlip", "RandomHorizontalFlipWithPoint", "RandomHorizontalFlipWithPoints",
+    "RandomVerticalFlip", "RandomVerticalFlipWithPoint","RandomVerticalFlipWithPoints", "RandomHVFlip", "RandomHVFlipWithPoints",
     "RandomResizedCrop", "RandomSizedCrop", "FiveCrop", "TenCrop", "PaddedSquare","PaddedSquareWithPoints", "RandomPad", "RandomPadWithPoints","RandomPadWithoutPoints"
      "ColorJitter","ColorJitterWithPoints", "BackgroundReplacement","BackgroundReplacementWithPoints",
      "ColorThresholdSegmentation","ColorThresholdSegmentationWithPoints","GrayThresholdSegmentation","GrayThresholdSegmentationWithPoints",
@@ -495,6 +495,30 @@ class RandomHorizontalFlipWithPoint(object):
     def __repr__(self):
         return self.__class__.__name__ + '(p={})'.format(self.p)
 
+class RandomHorizontalFlipWithPoints(object):
+    """Horizontally flip the given PIL Image randomly with multiples points and a given probability.
+    Args:
+        p (float): probability of the image being horizontally or non flipped. Default value is 0.5,0.50 for shoe data
+    """
+    def __init__(self, p=0.5):
+        self.p = p
+
+    def __call__(self, img,x,y,confidence, w=1, h=1):
+        """
+        Args:
+            img (numpy ndarray): Image to be flipped.
+        Returns:
+            numpy ndarray: Randomly flipped image.
+        """
+        if random.random() < self.p:  # 0-0.5
+            return F.flip_with_points(img,x,y, 'x',confidence, w,h)    # Horizontally Flip with points
+        else:                                # 0.5-0.1
+            return img,x,y                       # non-flip
+
+    def __repr__(self):
+        return self.__class__.__name__ + '(p={})'.format(self.p)
+
+
 class RandomVerticalFlipWithPoint(object):
     """Vertically flip the given PIL Image randomly with a given probability.
     Args:
@@ -513,6 +537,29 @@ class RandomVerticalFlipWithPoint(object):
         if random.random() < self.p:
             return F.flip_with_point(img,x,y, 'y',w,h)
         return img,x,y
+
+    def __repr__(self):
+        return self.__class__.__name__ + '(p={})'.format(self.p)
+
+class RandomVerticalFlipWithPoints(object):
+    """Vertically flip the given PIL Image randomly with multiples points and a given probability.
+    Args:
+        p (float): probability of the image being vertically or non flipped. Default value is 0.5,0.50 for shoe data
+    """
+    def __init__(self, p=0.5):
+        self.p = p
+
+    def __call__(self, img,x,y,confidence, w=1, h=1):
+        """
+        Args:
+            img (numpy ndarray): Image to be flipped.
+        Returns:
+            numpy ndarray: Randomly flipped image.
+        """
+        if random.random() < self.p:  # 0-0.5
+            return F.flip_with_points(img,x,y, 'y',confidence, w,h)    # Vertically Flip with points
+        else:                                # 0.5-0.1
+            return img,x,y                       # non-flip
 
     def __repr__(self):
         return self.__class__.__name__ + '(p={})'.format(self.p)
@@ -1301,7 +1348,10 @@ class ColorThresholdSegmentation(object):
             v3, s3, h3 = int(v[-1,0]),int(s[-1,0]),int(h[-1,0])
             v4, s4, h4 = int(v[-1,-1]),int(s[-1,-1]),int(h[-1,-1])
             c_hue, c_sat, c_val = round((h1+h2+h3+h4)/4),round((s1+s2+s3+s4)/4),round((v1+v2+v3+v4)/4)
-        #elif self.color_mode == "constant"： # TODO
+        elif self.color_mode == "constant": # replace constant pixel values, take black as an example
+        	c_hue, c_sat, c_val = int(0), int(0), int(0)
+        else:
+            pass # c_hue, c_sat, c_val = int(128), int(128), int(128)
         #elif self.color_mode == "most_frequent"： #TODO
 
         mask =  cv2.inRange(img_hsv, (c_hue-self.hue_de, c_sat-self.sat_de , c_val-self.val_de),(c_hue+self.hue_de, c_sat+self.sat_de , c_val+self.val_de)) # cv2.inRange(img, (int, int, int), ())
@@ -1349,7 +1399,10 @@ class ColorThresholdSegmentationWithPoints(object):
             v3, s3, h3 = int(v[-1,0]),int(s[-1,0]),int(h[-1,0])
             v4, s4, h4 = int(v[-1,-1]),int(s[-1,-1]),int(h[-1,-1])
             c_hue, c_sat, c_val = round((h1+h2+h3+h4)/4),round((s1+s2+s3+s4)/4),round((v1+v2+v3+v4)/4)
-        #elif self.color_mode == "constant"： # TODO
+        elif self.color_mode == "constant": # replace constant pixel values, take black as an example
+        	c_hue, c_sat, c_val = int(0), int(0), int(0)
+        else:
+            pass
         #elif self.color_mode == "most_frequent"： #TODO
 
         mask =  cv2.inRange(img_hsv, (c_hue-self.hue_de, c_sat-self.sat_de , c_val-self.val_de),(c_hue+self.hue_de, c_sat+self.sat_de , c_val+self.val_de)) # cv2.inRange(img, (int, int, int), ())

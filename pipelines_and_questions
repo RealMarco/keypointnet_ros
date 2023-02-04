@@ -42,6 +42,10 @@ $ catkin_create_pkg keypoint_ros std_msgs rospy roscpp sensor_msgs darknet_ros_m
 0)
 $ catkin_create_pkg keypointnet_ros_msgs actionlib_msgs geometry_msgs sensor_msgs message_runtime std_msgs
 $ catkin_create_pkg keypointnet_ros rospy roscpp std_msgs cv_bridge sensor_msgs darknet_ros_msgs keypointnet_ros_msgs image_transport message_generation message_runtime nodelet actionlib
+
+# Add msg and code files into /keypointnet_ros_msgs/msg and /keypointnet_ros/scripts respectively
+# Modify CMakeLists.txt and package.xml in /keypointnet_ros_msgs and /keypointnet_ros referring to darknet_ros package
+
 $ catkin_make -DPYTHON_EXECUTABLE=/usr/bin/python3   # instead of catkin_make [Error]
 1) train resnet34 classification model without @paddle.jit.to_static to acuquire a model with smaller size
 2) cv.circle(,(x,y),) plt.plot(x+0.5, y+0.5)

@@ -123,7 +123,7 @@ def PCinfer(model1,model2, test_filelists2):  # model3,
 
 ## Keypoints Detection
 ### KP inference function
-def KPinfer(model, test_filelists2, state_mode = False, orient_mode = False): # state_mode and orient_mode are post processing mode flag
+def KPinfer(model, test_filelists2, state_mode = False, orient_mode = False): # state_mode and orient_mode are post processing mode flag 
     '''
     ### Keypoint dataloader v1
     KP_transforms = trans.Compose([
@@ -273,7 +273,7 @@ def KPinfer(model, test_filelists2, state_mode = False, orient_mode = False): # 
     elif orient_mode == False and state_mode == True:
         return confident_kps, states
     else: # orient_mode == False and state_mode == False:
-        return confident_kps
+        return confident_kps  # including coordinates in image coordinate system
         
     # return confident_kps, orientations # KPlogits, KPimgs, confident_kps
 

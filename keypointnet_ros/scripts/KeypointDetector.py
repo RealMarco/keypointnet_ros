@@ -106,7 +106,7 @@ def inferCallback(bbxes):
         state_classes =PCinfer(PCmodel,PCmodel2, CroppedImgs) # CroppeedImg num x 1
         
         ### Infer keypoints with confidence in the format of [toe_c, toe_x, toe_y, heel_c ...,  inside ..., outside ..., topline ... ] 
-        confident_kps, orientations, states = KPinfer(KPmodel,CroppedImgs,orient_mode =True,state_mode = True)  #the size of confident_kps is CroppeedImg num x 15
+        confident_kps, orientations, states = KPinfer(KPmodel,CroppedImgs,orient_mode =True,state_mode = True)  #the size of confident_kps is CroppeedImg num x 15, including coordinates in image coordinate system
         
         # publish keypoints with state, orientation and its KPImage
         #rospy.sleep(0.2)
