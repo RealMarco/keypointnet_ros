@@ -1,4 +1,4 @@
- $ install paddle according to https://www.paddlepaddle.org.cn/install/old#old-version-anchor-7-Conda%E5%AE%89%E8%A3%85%E6%96%B9%E5%BC%8F 
+ $ install paddle according to https://www.paddlepaddle.org.cn/install/old#old-version-anchor-7-Conda%E5%AE%89%E8%A3%85%E6%96%B9%E5%BC%8F and https://www.paddlepaddle.org.cn/documentation/docs/en/2.2/install/pip/linux-pip_en.html
  conda install paddlepaddle-gpu==2.2.2 cudatoolkit=11.2 -c https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/Paddle/ -c conda-forge
 
  $ conda install 
