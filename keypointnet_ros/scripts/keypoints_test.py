@@ -1,4 +1,4 @@
-#!/home/dongyi/anaconda3/envs/paddle_env/bin/python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 @author: marco
@@ -15,7 +15,7 @@
 #import logging 
 #from datetime import datetime
 import sys
-sys.path.append('/home/dongyi/ur_ws_vision/src/keypointnet_ros/keypointnet_ros/scripts')
+sys.path.append('/home/marco/robotic_sorting/src/keypointnet_ros/keypointnet_ros/scripts')
 # sys.path.append('/home/dongyi/anaconda3/envs/paddle_env/lib/python3.9/site-packages')
 if '/usr/lib/python3/dist-packages' in sys.path: # before importing other modules or packages
     sys.path.remove('/usr/lib/python3/dist-packages')

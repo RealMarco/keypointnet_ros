@@ -1,4 +1,4 @@
-#!/home/dongyi/anaconda3/envs/paddle_env/bin/python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 #!/home/dongyi/anaconda3/envs/paddle_env/bin/python
@@ -7,7 +7,7 @@ Created on Tue Aug 30 12:51:52 2022
 @author: marco
 """
 import sys
-sys.path.append('/home/dongyi/ur_ws_vision/src/keypointnet_ros/keypointnet_ros/scripts')
+sys.path.append('/home/marco/robotic_sorting/src/keypointnet_ros/keypointnet_ros/scripts')
 # sys.path.append('/home/dongyi/anaconda3/envs/paddle_env/lib/python3.9/site-packages')
 if '/usr/lib/python3/dist-packages' in sys.path: # before importing other modules or packages
     sys.path.remove('/usr/lib/python3/dist-packages')

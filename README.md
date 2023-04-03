@@ -11,7 +11,7 @@ The KeypointNet-ROS package has been tested under ROS Noetic and Ubuntu 20.04. T
 ## Installation, and Building (Compiling)  
 ##### 0. Install ROS and create your workspace   
 ##### 1. Establish your keypointnet python environment *keypointnet*, and virtual environment by conda is highly-recommended. (Install ROS at first, then install anaconda/miniconda)   
-##### 2. Install the essential python packages and libraries according to [requirements.txt](requirements.txt) in your keypointnet env.   
+##### 2. (If you have multiple DL frameworks in the environment, manually) Install the essential python packages and libraries according to [requirements.txt](requirements.txt) in your keypointnet env.   
 ##### 3. Fork this repository in */your_workspace_name/src/* by *$ git clone ...* or other method.   
 ##### 4. Compile ROS packages  
     $ cd ~/your_workspace_name/   

@@ -16,7 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   # message_runtime
   nodelet
-  roscpp
+  # roscpp
   rospy
   sensor_msgs
   std_msgs
@@ -114,7 +114,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES keypointnet_ros
-  CATKIN_DEPENDS keypointnet_ros_msgs actionlib cv_bridge darknet_ros_msgs image_transport message_runtime nodelet roscpp rospy sensor_msgs std_msgs #message_generation
+  CATKIN_DEPENDS keypointnet_ros_msgs actionlib cv_bridge darknet_ros_msgs image_transport message_runtime nodelet rospy sensor_msgs std_msgs #message_generation roscpp 
   DEPENDS system_lib
 )
 
