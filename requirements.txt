@@ -4,6 +4,7 @@
  $ conda install 
  scikit-learn
  numpy
+ pandas
  $ conda install -c conda-forge opencv
  $ conda install -c conda-forge rospkg
 
